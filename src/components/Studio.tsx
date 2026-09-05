@@ -106,7 +106,7 @@ export default function Studio({ track, onReady, onExit }: Props) {
     setApiKey(keyDraft);
     setKeySaved(hasLiveKey());
     audio.uiClick();
-    setMsgs((m) => [...m, { role: 'ai', text: hasLiveKey() ? 'المفتاح تسجّل. دابا التuteur غادي يهدر معاك ب Gemini laif — سولو أي حاجة!' : 'المفتاح خاصو يبدا ب AIza… — جيبو من aistudio.google.com/apikey' }]);
+    setMsgs((m) => [...m, { role: 'ai', text: hasLiveKey() ? 'المفتاح تسجّل بنجاح. دابا المساعد الذكي غادي يهدر معاك بـ Gemini laif — سولو أي حاجة!' : 'المفتاح خاصو يبدا بـ AQ. ولا AIza… — جيبو من aistudio.google.com/apikey' }]);
   };
 
   const step = track.steps[stepIdx];
@@ -375,19 +375,19 @@ export default function Studio({ track, onReady, onExit }: Props) {
           </div>
 
           {!keySaved && (
-            <div className="px-4 py-3 border-b border-line bg-amber/5">
-              <p className="font-ar text-[13px] text-dim leading-relaxed mb-2">
-                باش التuteur يهدر معاك ب <span className="text-lime">Gemini laif</span>، لصق الـ API key ديالك (كاتبدا ب AIza) من
-                <span className="text-cyan"> aistudio.google.com/apikey</span>:
+            <div className="px-4 py-3 border-b border-line bg-amber/5" dir="rtl">
+              <p className="font-ar text-[13px] text-dim leading-relaxed mb-2 text-right">
+                باش المساعد الذكي يهدر معاك بـ <span className="text-lime font-bold">Gemini laif</span>، لصق الـ API key ديالك (كايبدا بـ <code className="text-cyan">AQ.</code> ولا <code className="text-cyan">AIza</code>) من
+                <span className="text-cyan"> aistudio.google.com/apikey</span>. تقدر تدير حتى مفاتيح متعددة:
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2" dir="ltr">
                 <input
                   value={keyDraft}
                   onChange={(e) => setKeyDraft(e.target.value)}
-                  placeholder="AIza…"
-                  className="flex-1 chamfer-sm bg-panel2 border border-line px-3 py-2 text-sm text-ink outline-none focus:border-cyan"
+                  placeholder="AQ.Ab... ولا AIza..."
+                  className="flex-1 chamfer-sm bg-panel2 border border-line px-3 py-2 text-sm text-ink outline-none focus:border-cyan font-mono"
                 />
-                <button onClick={saveKey} className="neon-btn neon-btn-lime chamfer-sm px-4 py-2 text-xs">حفظ</button>
+                <button onClick={saveKey} className="neon-btn neon-btn-lime chamfer-sm px-4 py-2 text-xs font-ar font-bold">حفظ</button>
               </div>
             </div>
           )}

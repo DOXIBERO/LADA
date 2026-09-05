@@ -17,12 +17,23 @@ export function getApiKey(): string {
   try { return localStorage.getItem(KEY_STORAGE) ?? ''; } catch { return ''; }
 }
 
+export function isValidKeyFormat(k: string): boolean {
+  const trimmed = k.trim();
+  return /^AIza[0-9A-Za-z_-]{30,50}$/.test(trimmed) || /^AQ\.[0-9A-Za-z_.-]{35,85}$/.test(trimmed);
+}
+
 export function setApiKey(key: string): void {
   try {
     const trimmed = key.trim();
-    // Google AI Studio keys start with AIza and are base64-like strings
-    if (trimmed === '' || /^AIza[0-9A-Za-z_-]{30,50}$/.test(trimmed)) {
-      localStorage.setItem(KEY_STORAGE, trimmed);
+    if (trimmed === '') {
+      localStorage.setItem(KEY_STORAGE, '');
+      return;
+    }
+    // Support single key or comma/space separated key pool
+    const keys = trimmed.split(/[\s,;]+/).filter(Boolean);
+    const validKeys = keys.filter(isValidKeyFormat);
+    if (validKeys.length > 0) {
+      localStorage.setItem(KEY_STORAGE, validKeys.join(','));
     }
   } catch { /* private mode */ }
 }
@@ -31,10 +42,29 @@ export function clearApiKey(): void {
   try { localStorage.removeItem(KEY_STORAGE); } catch { /* noop */ }
 }
 
-/** A usable Google AI Studio key starts with AIza */
+let keyIdx = 0;
+
+/** Returns the active key from the pool, or next on rotation */
+export function getActiveKey(): string {
+  const stored = getApiKey();
+  if (!stored) return '';
+  const pool = stored.split(',').map((s) => s.trim()).filter(Boolean);
+  if (pool.length === 0) return '';
+  return pool[keyIdx % pool.length];
+}
+
+export function rotateKey(): void {
+  const stored = getApiKey();
+  const pool = stored.split(',').filter(Boolean);
+  if (pool.length > 1) {
+    keyIdx = (keyIdx + 1) % pool.length;
+  }
+}
+
+/** A usable Google AI Studio key starts with AIza or modern 2026 AQ. */
 export function hasLiveKey(): boolean {
-  const k = getApiKey();
-  return k.startsWith('AIza') && k.length >= 35;
+  const k = getActiveKey();
+  return (k.startsWith('AIza') || k.startsWith('AQ.')) && k.length >= 30;
 }
 
 export const TUTOR_SYSTEM = `Nta hiya LADA — tuteur dyal l-Almaniya l l-Mgharba li kaybdaw mn SIFR (A0).
@@ -44,9 +74,9 @@ export const TUTOR_SYSTEM = `Nta hiya LADA — tuteur dyal l-Almaniya l l-Mgharb
 - Ila so2lo 3la grammaire, chra7ha b darija f jomla wa7da basita.
 - Ma thderch b l-engliziya wla l-fransiya — ghir darija + l-kelm l-Almaniya.`;
 
-/** One-shot live tutor call. Throws on missing key / network / quota. */
+/** One-shot live tutor call. Throws on missing key / network / quota. Supports multi-key failover. */
 export async function askTutor(userPrompt: string, extraContext = ''): Promise<string> {
-  const key = getApiKey();
+  let key = getActiveKey();
   if (!key || !hasLiveKey()) throw new Error('no-key');
 
   const cleanPrompt = userPrompt.trim().slice(0, 300);
@@ -54,19 +84,36 @@ export async function askTutor(userPrompt: string, extraContext = ''): Promise<s
 
   const cleanContext = extraContext.trim().slice(0, 500);
 
-  const res = await fetch(`${ENDPOINT}?key=${encodeURIComponent(key)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: TUTOR_SYSTEM + (cleanContext ? `\n\nCONTEXT DYAL DARS:\n${cleanContext}` : '') }] },
-      contents: [{ role: 'user', parts: [{ text: cleanPrompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 220 },
-    }),
-  });
+  const executeCall = async (apiKey: string) => {
+    return fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: TUTOR_SYSTEM + (cleanContext ? `\n\nCONTEXT DYAL DARS:\n${cleanContext}` : '') }] },
+        contents: [{ role: 'user', parts: [{ text: cleanPrompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 220 },
+      }),
+    });
+  };
+
+  let res = await executeCall(key);
+
+  // If rate-limited (429), try rotating to the next key in the pool
+  if (res.status === 429) {
+    rotateKey();
+    const nextKey = getActiveKey();
+    if (nextKey !== key) {
+      key = nextKey;
+      res = await executeCall(key);
+    }
+  }
 
   if (!res.ok) {
     if (res.status === 429) throw new Error('quota — l-mifta7 wsel l-limit, tsenna chwiya');
-    if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('mifta7 machi sa7i7 — check AIza...');
+    if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('mifta7 machi sa7i7 — check API key...');
     throw new Error(`API error (${res.status})`);
   }
 
