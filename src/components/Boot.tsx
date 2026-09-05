@@ -60,9 +60,9 @@ export default function Boot({ onStart }: { onStart: () => void }) {
             <p className="font-display text-lg md:text-2xl text-cyan tracking-[0.2em] mt-4">
               DARIJA <span className="text-mag">⟶</span> DEUTSCH
             </p>
-            <p className="text-dim text-lg md:text-xl mt-2 max-w-xl leading-snug">
-              T3allem l-Almaniya b darija — <span className="text-ink">rhythm, phonetics, w reflex</span>.
-              Studio → Highway → Vocal Arena. Ghalta dyalek l-youm hiya l-boss level dyal ghedda.
+            <p className="text-dim text-lg md:text-xl mt-2 max-w-xl leading-relaxed font-ar">
+              تعلّم الألمانية بالدارجة — <span className="text-ink">ريتم، فونيتيك، و ريفليكس</span>.
+              ستوديو ← الأوتوبان ← حلبة الصوت. الغلطة ديالك اليوم هي البوس ليفل ديال غدّا.
             </p>
             <button
               onClick={() => { audio.ensure(); audio.uiOpen(); onStart(); }}
@@ -92,11 +92,11 @@ export default function Boot({ onStart }: { onStart: () => void }) {
 
             <div className="panel chamfer p-5">
               <div className="panel-tag mb-3">CONTROL SCHEME</div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="text-dim">Steer lanes</div><div className="text-ink font-semibold">◀ ▶ / A D</div>
-                <div className="text-dim">Vocal tap</div><div className="text-ink font-semibold">SPACE</div>
-                <div className="text-dim">Pause</div><div className="text-ink font-semibold">ESC / P</div>
-                <div className="text-dim">Mastery law</div><div className="text-lime font-semibold">≥85% + 10x COMBO</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm font-ar">
+                <div className="text-dim">القيادة فاللينات</div><div className="text-ink font-semibold" dir="ltr">◀ ▶ / A D</div>
+                <div className="text-dim">الطاب ديال الصوت</div><div className="text-ink font-semibold">SPACE</div>
+                <div className="text-dim">الوقفة</div><div className="text-ink font-semibold">ESC / P</div>
+                <div className="text-dim">قانون الإتقان</div><div className="text-lime font-semibold" dir="ltr">≥85% + 10x COMBO</div>
               </div>
             </div>
           </div>
@@ -104,9 +104,9 @@ export default function Boot({ onStart }: { onStart: () => void }) {
 
         {/* vocab ticker */}
         <div className="relative border-t border-line py-2 overflow-hidden mb-2">
-          <div className="ticker-track whitespace-nowrap font-display text-sm text-dim tracking-[0.25em] w-max">
-            <span className="pr-10">{ticker}</span>
-            <span className="pr-10">{ticker}</span>
+          <div className="ticker-track whitespace-nowrap font-ar text-base text-dim w-max">
+            <span className="px-6">{ticker}</span>
+            <span className="px-6">{ticker}</span>
           </div>
         </div>
       </div>

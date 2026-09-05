@@ -136,7 +136,7 @@ export default function Studio({ track, onReady, onExit }: Props) {
             <div>
               <div className="panel-tag">LEVEL 1 — STUDIO SESSION</div>
               <div className="font-display text-2xl text-ink">{track.tier} <span className="text-cyan text-glow-cyan">{track.title}</span>
-                <span className="ml-3 text-dim text-sm font-body">{track.tagline}</span>
+                <span className="ml-3 text-dim text-sm font-ar">{track.tagline}</span>
               </div>
             </div>
           </div>
@@ -162,12 +162,12 @@ export default function Studio({ track, onReady, onExit }: Props) {
               <canvas ref={canvasRef} className="w-full h-24 block" />
               <div className="mt-3 grid gap-2">
                 <div className="chamfer-sm border border-cyan/25 bg-cyan/5 p-3">
-                  <div className="panel-tag mb-1">L-MA3NA</div>
-                  <p className="text-ink leading-snug">{track.ma3na}</p>
+                  <div className="panel-tag mb-1">L-MA3NA · المعنى</div>
+                  <p className="text-ink leading-relaxed font-ar text-[15px]">{track.ma3na}</p>
                 </div>
                 <div className="chamfer-sm border border-amber/30 bg-amber/5 p-3">
-                  <div className="panel-tag !text-amber mb-1" style={{ color: '#ffb300', textShadow: '0 0 12px rgba(255,179,0,0.7)' }}>QAWA3ID — GRAMMAR HACK</div>
-                  <p className="text-ink leading-snug">{track.qawa3id}</p>
+                  <div className="panel-tag !text-amber mb-1" style={{ color: '#ffb300', textShadow: '0 0 12px rgba(255,179,0,0.7)' }}>QAWA3ID · القواعد</div>
+                  <p className="text-ink leading-relaxed font-ar text-[15px]">{track.qawa3id}</p>
                 </div>
               </div>
             </div>
@@ -189,7 +189,8 @@ export default function Studio({ track, onReady, onExit }: Props) {
                         <button
                           key={opt}
                           onClick={() => pick(opt)}
-                          className={`chamfer-sm border px-4 py-2.5 text-left font-body text-lg tracking-wide transition-all duration-100
+                          dir="rtl"
+                          className={`chamfer-sm border px-4 py-2.5 text-right font-ar text-xl leading-none transition-all duration-100
                             ${isRight ? 'border-lime bg-lime/20 text-lime' : isWrong ? 'border-mag bg-mag/20 text-mag' : 'border-line bg-panel2/60 text-ink hover:border-cyan/60 hover:bg-cyan/10'}`}
                         >
                           {opt}
@@ -198,15 +199,15 @@ export default function Studio({ track, onReady, onExit }: Props) {
                     })}
                   </div>
                   {wrongPick && (
-                    <p className="mt-2 text-sm text-mag">
-                      La! {TRAPS[track.words.find((w) => w.dz === round.correct)?.trap ?? 'ich'].label} — jerreb mra khra.
+                    <p className="mt-2 text-base text-mag font-ar">
+                      لا! {TRAPS[track.words.find((w) => w.dz === round.correct)?.trap ?? 'ich'].label} — جرّب مرّة خرى.
                     </p>
                   )}
                 </div>
               ) : (
                 <div className="rise text-center py-6">
                   <div className="font-display text-3xl text-lime text-glow-lime mb-2">CHECKPOINT CLEAR</div>
-                  <p className="text-dim">L-mkh sa9i. Daba l-highway — {track.words.length * 2} gates, {track.bpm} BPM.</p>
+                  <p className="text-dim font-ar">المخّ صافي. دابا الأوتوبان — {track.words.length * 2} غيت، {track.bpm} BPM.</p>
                 </div>
               )}
             </div>
@@ -228,9 +229,8 @@ export default function Studio({ track, onReady, onExit }: Props) {
                     <span className="font-display text-xl text-ink">{w.de}</span>
                     <span className="text-dim text-sm">{w.ipa}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <span className="text-cyan font-semibold tracking-wide">{w.dz}</span>
-                    <span className="font-arabic text-dim" dir="rtl">{w.ar}</span>
+                  <div className="flex items-center justify-between gap-2 mt-1">
+                    <span className="font-ar text-cyan text-xl leading-none">{w.dz}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="chamfer-sm bg-mag/10 border border-mag/40 text-mag px-2 py-0.5 text-[10px] font-display tracking-widest">
@@ -240,15 +240,15 @@ export default function Studio({ track, onReady, onExit }: Props) {
                   </div>
                   {open && (
                     <div className="mt-3 grid gap-2 rise">
-                      <p className="text-ink text-sm leading-snug">{trap.tip}</p>
+                      <p className="text-ink text-[15px] leading-relaxed font-ar">{trap.tip}</p>
                       <span
                         role="button"
                         tabIndex={0}
                         onClick={(e) => { e.stopPropagation(); audio.speak(w.de); }}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); audio.speak(w.de); } }}
-                        className="neon-btn chamfer-sm px-3 py-1.5 text-xs w-fit"
+                        className="neon-btn chamfer-sm px-3 py-1.5 text-xs w-fit font-ar"
                       >
-                        ◉ SME3 — {w.de}
+                        ◉ سمع — {w.de}
                       </span>
                     </div>
                   )}
@@ -258,9 +258,9 @@ export default function Studio({ track, onReady, onExit }: Props) {
           </div>
         </div>
 
-        <div className="mt-3 text-dim text-xs tracking-widest flex justify-between">
-          <span>CLICK A CARD → L-FAKH BREAKDOWN</span>
-          <span className="hidden md:inline">TTS: {audio.ttsReady ? 'DE-DE VOICE READY' : 'SYNTH FALLBACK'}</span>
+        <div className="mt-3 text-dim text-sm flex justify-between items-center">
+          <span className="font-ar">دوز على الكارط → تحليل الفخّ الصوتي</span>
+          <span className="hidden md:inline text-xs tracking-widest font-body">TTS: {audio.ttsReady ? 'DE-DE VOICE READY' : 'SYNTH FALLBACK'}</span>
         </div>
       </div>
     </div>

@@ -351,9 +351,9 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(0, lineY); ctx.lineTo(W, lineY); ctx.stroke();
       ctx.fillStyle = '#6d87ad';
-      ctx.font = '700 11px Rajdhani, sans-serif';
+      ctx.font = '600 13px "Noto Kufi Arabic", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('TAP LINE — hit SPACE when a marker lands', 8, lineY + 16);
+      ctx.fillText('خط الدق — دق SPACE ملي كايوصل الماركر', 8, lineY + 18);
       marks.forEach((m, i) => {
         const dtm = m - t;
         const y = lineY - dtm * (H * 0.22);
@@ -402,8 +402,8 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
             <span className="ml-3 font-display text-ink">{track.title}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`chamfer-sm px-3 py-1 font-display text-xs tracking-widest border ${mic === 'on' ? 'text-lime border-lime/50 bg-lime/10' : mic === 'off' ? 'text-amber border-amber/50 bg-amber/10' : 'text-dim border-line'}`}>
-              {mic === 'on' ? '● MIC LIVE' : mic === 'off' ? '● MIC OFFLINE — TAP MODE' : '● REQUESTING MIC'}
+            <div className={`chamfer-sm px-3 py-1 font-ar text-sm border ${mic === 'on' ? 'text-lime border-lime/50 bg-lime/10' : mic === 'off' ? 'text-amber border-amber/50 bg-amber/10' : 'text-dim border-line'}`}>
+              {mic === 'on' ? '● المايك خدّام' : mic === 'off' ? '● المايك طايح — مود الطاب' : '● كانطلبو المايك'}
             </div>
             <div className="panel chamfer-sm px-3 py-1 font-display text-sm text-cyan">{wi + 1}/{words.length}</div>
             <button onClick={togglePause} className="neon-btn chamfer-sm px-3 py-1 text-xs">{paused ? 'RESUME' : 'PAUSE'}</button>
@@ -417,9 +417,8 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
             <div className="font-display text-4xl md:text-5xl text-ink text-glow-cyan leading-tight">{word.de}</div>
             <div className="text-dim">{word.ipa}</div>
           </div>
-          <div className="text-right">
-            <div className="font-display text-2xl text-cyan">{word.dz}</div>
-            <div className="font-arabic text-xl text-dim" dir="rtl">{word.ar}</div>
+          <div className="text-right" dir="rtl">
+            <div className="font-ar text-3xl text-cyan leading-tight">{word.dz}</div>
           </div>
           {phase === 'grade' && score !== null && (
             <div className="text-center rise">
@@ -435,20 +434,20 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
           {phase === 'intro' && (
             <div className="absolute inset-0 flex items-center justify-center bg-void/40">
               <div className="text-center rise">
-                <div className="font-display text-lg text-cyan tracking-widest">SME3… FEEL THE PITCH</div>
-                <div className="text-dim mt-1">{analyserRef.current ? 'Sing it into the green band' : 'Tap SPACE with each syllable drop'}</div>
+                <div className="font-ar text-2xl text-cyan">سمع… حسّ بالپيتش</div>
+                <div className="text-dim mt-1 font-ar">{analyserRef.current ? 'غنّيها فالزون الخضرا' : 'دق SPACE مع كل سيلاب كيطيح'}</div>
               </div>
             </div>
           )}
           {phase === 'live' && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 font-display text-sm tracking-[0.3em] text-lime blink">
-              {analyserRef.current ? '● RECORDING — SING!' : '● TAP THE DROPS!'}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 font-ar text-lg text-lime blink">
+              {analyserRef.current ? '● كاتسجيل — غنّي!' : '● دق الدروب!'}
             </div>
           )}
           {phase === 'grade' && coach && (
             <div className="absolute bottom-3 left-3 right-3 rise">
-              <div className="chamfer-sm bg-panel2/95 border border-cyan/30 px-4 py-2 text-sm md:text-base text-ink">
-                <span className="panel-tag mr-2">LADA CORE</span>{coach}
+              <div className="chamfer-sm bg-panel2/95 border border-cyan/30 px-4 py-2 text-[15px] md:text-base text-ink font-ar leading-relaxed">
+                <span className="panel-tag ml-2">LADA CORE</span>{coach}
               </div>
             </div>
           )}
@@ -467,8 +466,9 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-40 bg-void/70 flex items-center justify-center">
+        <div className="absolute inset-0 z-40 bg-void/70 flex flex-col items-center justify-center gap-2">
           <div className="font-display text-4xl text-lime text-glow-lime rise">VOCAL RUN COMPLETE</div>
+          <div className="font-ar text-xl text-dim rise">الجولة الصوتية صافية — دابا التحليل</div>
         </div>
       )}
 
@@ -477,7 +477,7 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
           <div className="panel chamfer p-8 w-[min(92vw,420px)] rise text-center">
             <div className="font-display text-3xl text-cyan text-glow-cyan mb-4">PAUSED</div>
             <button onClick={togglePause} className="neon-btn chamfer-sm px-6 py-3 w-full">RESUME ARENA</button>
-            <p className="text-dim text-sm mt-4">ESC / P — resume · SPACE — tap syllables</p>
+            <p className="text-dim text-sm mt-4 font-ar" dir="rtl">ESC / P — كمّل · SPACE — دق السيلابات</p>
           </div>
         </div>
       )}

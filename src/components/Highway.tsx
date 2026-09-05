@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../game/audio';
-import { mulberry32, hashStr, type Track, type Word } from '../game/content';
+import { DZ_TO_WORD, mulberry32, hashStr, type Track, type Word } from '../game/content';
 import { pairHint } from '../game/ladaCore';
 
 /* ============================================================
@@ -453,15 +453,18 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
         ctx.stroke();
         ctx.fillRect(cx - gw / 2, y - gateH, gw, gateH * 0.32);
         ctx.strokeRect(cx - gw / 2, y - gateH, gw, gateH * 0.32);
-        // labels
-        const fs = Math.max(9, 21 * t);
-        ctx.fillStyle = near ? '#ffffff' : `rgba(0,240,255,${0.4 + t * 0.6})`;
-        ctx.font = `700 ${fs}px Rajdhani, sans-serif`;
+        // labels — Darija in Arabic script (main), its German below (dim)
+        const fs = Math.max(10, 22 * t);
+        ctx.fillStyle = near ? '#ffffff' : `rgba(0,240,255,${0.45 + t * 0.55})`;
+        ctx.font = `700 ${fs}px "Noto Kufi Arabic", sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(g.ev.lanes[lane].toUpperCase(), cx, y - gateH + gateH * 0.22);
-        ctx.font = `500 ${Math.max(7, 12 * t)}px "Noto Kufi Arabic", sans-serif`;
-        ctx.fillStyle = `rgba(217,236,255,${0.25 + t * 0.45})`;
-        ctx.fillText(g.ev.lanes[lane], cx, y - gateH + gateH * 0.305);
+        ctx.fillText(g.ev.lanes[lane], cx, y - gateH + gateH * 0.21);
+        const de = DZ_TO_WORD[g.ev.lanes[lane]]?.de ?? '';
+        if (de) {
+          ctx.font = `600 ${Math.max(7, 11 * t)}px Rajdhani, sans-serif`;
+          ctx.fillStyle = `rgba(217,236,255,${0.25 + t * 0.45})`;
+          ctx.fillText(de, cx, y - gateH + gateH * 0.30);
+        }
       }
       // approach chevron under the live gate row
       if (isNearest) {
@@ -649,18 +652,18 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
       </div>
       <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 pointer-events-none">
         {toasts.map((t, i) => (
-          <div key={`${t}-${i}`} className="rise chamfer-sm bg-mag/15 border border-mag/50 text-mag px-4 py-1 font-display text-sm tracking-widest">
+          <div key={`${t}-${i}`} className="rise chamfer-sm bg-mag/15 border border-mag/50 text-mag px-4 py-1 font-ar text-lg leading-none">
             {t}
           </div>
         ))}
       </div>
 
       {/* controls hint */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-dim text-sm tracking-widest pointer-events-none flex items-center gap-3">
-        <span className="border border-line px-2 py-0.5 text-cyan">◀ A</span>
-        <span>STEER</span>
-        <span className="border border-line px-2 py-0.5 text-cyan">D ▶</span>
-        <span className="hidden md:inline border border-line px-2 py-0.5 text-amber">ESC ⏸</span>
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-dim text-sm pointer-events-none flex items-center gap-3 font-ar">
+        <span className="border border-line px-2 py-0.5 text-cyan font-body tracking-widest">◀ A</span>
+        <span>دوّر اللينات</span>
+        <span className="border border-line px-2 py-0.5 text-cyan font-body tracking-widest">D ▶</span>
+        <span className="hidden md:inline border border-line px-2 py-0.5 text-amber font-body tracking-widest">ESC ⏸</span>
       </div>
 
       <button
@@ -676,16 +679,16 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
           <div className="panel chamfer p-8 w-[min(92vw,460px)] rise">
             <div className="panel-tag mb-2">SYSTEM HALT</div>
             <div className="font-display text-3xl text-cyan text-glow-cyan mb-1">PAUSED</div>
-            <p className="text-dim mb-6">L-runner wa9ef. L-beat clock msayb — ma kaybqch drift.</p>
+            <p className="text-dim mb-6 font-ar">الرانر واقف. الـ beat clock مسيّب — ما كاين حتى drift.</p>
             <div className="grid gap-3">
               <button onClick={togglePause} className="neon-btn chamfer-sm px-5 py-3">RESUME RUN</button>
               <button onClick={() => { togglePause(); restart(); }} className="neon-btn neon-btn-mag chamfer-sm px-5 py-3">RESTART TRACK</button>
               <button onClick={onExit} className="neon-btn chamfer-sm px-5 py-3 !text-dim !border-line">EXIT TO COMMAND DECK</button>
             </div>
-            <div className="mt-6 text-sm text-dim grid grid-cols-2 gap-y-1">
-              <span>◀ ▶ / A D — steer lanes</span>
-              <span>ESC / P — pause</span>
-              <span className="col-span-2">Hit the gate with the correct Darija translation.</span>
+            <div className="mt-6 text-sm text-dim grid grid-cols-2 gap-y-1 font-ar">
+              <span>◀ ▶ / A D — بدّل اللينات</span>
+              <span>ESC / P — الوقفة</span>
+              <span className="col-span-2">دوز اللين اللي فيها الترجمة الصحيحة بالدارجة.</span>
             </div>
           </div>
         </div>

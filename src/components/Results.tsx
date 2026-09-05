@@ -61,10 +61,10 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
               <h2 className={`font-display text-4xl md:text-5xl rise ${verdict.passed ? 'text-lime text-glow-lime' : 'text-mag text-glow-mag'}`}>
                 {verdict.passed ? (mode === 'revenge' ? 'REVENGE EXECUTED' : 'TRACK MASTERED') : 'SIGNAL LOST'}
               </h2>
-              <p className="text-dim mt-1">
+              <p className="text-dim mt-1 font-ar">
                 {verdict.passed
-                  ? 'Duzti l-Mastery Law. L-CORE zed l-stability dyal kol kelma.'
-                  : `Khass ≥85% — rak f ${Math.round(overall * 100)}%. ${verdict.failedWords.length} kelm mchaw f l-CRITICAL list.`}
+                  ? 'دوزتي الـ Mastery Law. الـ CORE زاد الـ stability ديال كل كلمة.'
+                  : `خاص ≥85% — راك ف ${Math.round(overall * 100)}%. ${verdict.failedWords.length} كلم مشاو فالـ CRITICAL list.`}
               </p>
             </div>
             <div className="relative w-36 h-36 rise" style={{ animationDelay: '100ms' }}>
@@ -104,9 +104,9 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
                 ))}
               </div>
               {hw && hw.maxCombo < 10 && (
-                <div className="panel chamfer p-4 text-sm text-dim">
-                  <span className="panel-tag !text-amber mr-2" style={{ color: '#ffb300' }}>COMBO LAW</span>
-                  L-Mastery kaytleb 10x combo streak. L-combo kaytbna melli kat-lock l-lane 9bel l-gate.
+                <div className="panel chamfer p-4 text-[15px] text-dim font-ar leading-relaxed">
+                  <span className="panel-tag !text-amber ml-2" style={{ color: '#ffb300' }}>COMBO LAW</span>
+                  الـ Mastery كيتطلّب سلسلة كومبو 10x. الكومبو كيتبنى ملي كاتسدّ اللين الصحيحة قبل ما يوصل الـ gate.
                 </div>
               )}
               <div className="panel chamfer p-4 flex-1">
@@ -134,8 +134,8 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
                 <div className="grid gap-2.5">
                   {coachLines.length === 0 && <div className="text-dim blink">ANALYZING…</div>}
                   {coachLines.map((l, i) => (
-                    <div key={i} className="rise chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2.5 text-ink leading-snug" style={{ animationDelay: `${i * 160}ms` }}>
-                      <span className="text-cyan font-display text-xs mr-2">▸</span>{l}
+                    <div key={i} className="rise chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2.5 text-ink leading-relaxed font-ar text-[15px]" style={{ animationDelay: `${i * 160}ms` }}>
+                      <span className="text-cyan ml-2">▸</span>{l}
                     </div>
                   ))}
                 </div>
@@ -144,7 +144,7 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
               {allDone && (
                 <div className="panel chamfer panel-lime p-5 rise text-center">
                   <div className="font-display text-3xl text-lime text-glow-lime mb-1">FLUENCY PROTOCOL COMPLETE</div>
-                  <p className="text-ink">Mabrouk a champion — tlata dyal l-tiers, kolhom mastered. Daba l-Almaniya katbda kat-rêver b darija.</p>
+                  <p className="text-ink font-ar text-lg">مبروك أ شومبيون — تلاتة ديال التييرز، كاملين mastered. دابا الألمانية كاتبدأ كاتريّڤ بالدارجة.</p>
                 </div>
               )}
 

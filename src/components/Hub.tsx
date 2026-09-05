@@ -67,8 +67,8 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
                     <div className="absolute inset-0 rounded-full border border-cyan/40" />
                     <div className="absolute inset-0 rounded-full border-t-2 border-cyan radar-sweep" />
                   </div>
-                  <p className="text-dim max-w-[260px]">
-                    L-mémoire khawya. Deploy to a track — every hit and miss kat-tkhzen hna, w kat-decay b <span className="text-cyan">R = e^(−Δt/S)</span>.
+                  <p className="text-dim max-w-[280px] font-ar leading-relaxed">
+                    الميموار خاوية. دوز على شي طراك — كل إصابة و كل غلطة كاتخزّن هنا، و كات-ديكاي بـ <span className="text-cyan" dir="ltr">R = e^(−Δt/S)</span>.
                   </p>
                 </div>
               ) : (
@@ -106,11 +106,11 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
 
             <div className="panel chamfer p-4">
               <div className="panel-tag mb-2">CONTROL SCHEME</div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                <div className="text-dim">Highway steer</div><div className="text-ink font-semibold">◀ ▶ / A D</div>
-                <div className="text-dim">Vocal tap</div><div className="text-ink font-semibold">SPACE</div>
-                <div className="text-dim">Pause</div><div className="text-ink font-semibold">ESC / P</div>
-                <div className="text-dim">Unlock law</div><div className="text-lime font-semibold">≥85% ACC</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm font-ar">
+                <div className="text-dim">القيادة فالأوتوبان</div><div className="text-ink font-semibold" dir="ltr">◀ ▶ / A D</div>
+                <div className="text-dim">الطاب ديال الصوت</div><div className="text-ink font-semibold">SPACE</div>
+                <div className="text-dim">الوقفة</div><div className="text-ink font-semibold">ESC / P</div>
+                <div className="text-dim">قانون الفتح</div><div className="text-lime font-semibold" dir="ltr">≥85% ACC</div>
               </div>
             </div>
           </div>
@@ -133,9 +133,9 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
                       </div>
                       <div className="font-display text-2xl md:text-3xl text-ink leading-tight">
                         {t.title}
-                        <span className="ml-3 font-body text-dim text-base">{t.tagline}</span>
+                        <span className="ml-3 font-ar text-dim text-base">{t.tagline}</span>
                       </div>
-                      <div className="text-dim text-sm mt-0.5">{t.words.length} morphemes · {t.bpm} BPM · traps: {t.words.filter((w, ix) => t.words.findIndex((x) => x.trap === w.trap) === ix).length} kinds</div>
+                      <div className="text-dim text-sm mt-0.5 font-ar">{t.words.length} كلمات · {t.bpm} BPM · الفخاخ: {t.words.filter((w, ix) => t.words.findIndex((x) => x.trap === w.trap) === ix).length} أنواع</div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="w-36">
@@ -159,8 +159,8 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
                           </button>
                         </div>
                       ) : (
-                        <div className="text-dim text-xs font-display tracking-widest border border-line px-4 py-2 chamfer-sm">
-                          LOCKED — CLEAR {TRACKS[i - 1].title} AT 85%
+                        <div className="text-dim text-sm font-ar border border-line px-4 py-2 chamfer-sm">
+                          مسدود — دوز {TRACKS[i - 1].title} ب 85%
                         </div>
                       )}
                     </div>
@@ -169,10 +169,10 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
               );
             })}
 
-            <div className="panel chamfer p-4 text-sm text-dim leading-relaxed">
-              <span className="panel-tag mr-2">DOCTRINE</span>
-              Traditional apps hum slow and boring. Language is <span className="text-cyan">rhythm</span>, <span className="text-mag">phonetics</span> and <span className="text-lime">subconscious reflex</span>.
-              Fail 3+ words or drop under 85% — and the CORE forges a <span className="text-mag">Boss Revenge Track</span> from your weakest morphemes, BPM dialed up.
+            <div className="panel chamfer p-4 text-[15px] text-dim leading-relaxed font-ar">
+              <span className="panel-tag ml-2">DOCTRINE · المذهب</span>
+              التطبيقات التقليدية بطيئة و مملة. اللغة هي <span className="text-cyan">ريتم</span>، <span className="text-mag">فونيتيك</span> و <span className="text-lime">ريفليكس لاواعي</span>.
+              غلط ف 3 كلمات ولا طيح تحت 85% — و الـ CORE كيصوّب ليك <span className="text-mag">Boss Revenge Track</span> من أضعف الكلمات ديالك، و الـ BPM كايطلع.
             </div>
           </div>
         </div>

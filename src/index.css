@@ -23,9 +23,11 @@ html, body, #root { height: 100%; }
 body {
   background: #04060e;
   color: #d9ecff;
-  font-family: "Rajdhani", sans-serif;
+  font-family: "Rajdhani", "Noto Kufi Arabic", sans-serif;
   overflow-x: hidden;
 }
+
+.font-ar { font-family: "Noto Kufi Arabic", "Rajdhani", sans-serif; }
 
 ::selection { background: rgba(0, 240, 255, 0.35); }
 
