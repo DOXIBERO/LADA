@@ -190,3 +190,168 @@ export async function synthesizeGeminiVoice(text: string, voiceName = 'Puck'): P
 
   return pcmBase64;
 }
+
+/* ============================================================
+   INTERACTIVE AI ROLEPLAY CONVERSATION ENGINE (A1)
+   ============================================================ */
+
+export interface RoleplayMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
+export interface RoleplayResponse {
+  germanReply: string;
+  darijaTranslation: string;
+  grammarCorrection: string;
+  suggestedReplies: string[];
+}
+
+export const ROLEPLAY_SCENARIOS: Record<string, { id: string; titleDe: string; titleDz: string; context: string; initialDe: string; initialDz: string }> = {
+  restaurant: {
+    id: 'restaurant',
+    titleDe: 'Im Restaurant / Dönerladen',
+    titleDz: 'فالمطعم ومحل الدونر',
+    context: 'Du bist ein freundlicher Kellner in Deutschland. Sprich einfaches, klares A1-Deutsch (1-2 Sätze). Der Nutzer bestellt Essen/Getränke.',
+    initialDe: 'Guten Tag! Willkommen! Was möchten Sie bestellen?',
+    initialDz: 'نهار مبروك! مرحباً بيك! شنو بغيتي تطلب؟',
+  },
+  bahn: {
+    id: 'bahn',
+    titleDe: 'Am Hauptbahnhof (DB)',
+    titleDz: 'ف محطة القطار ومكتب التذاكر',
+    context: 'Du bist ein Bahnbeamter am Schalter der Deutschen Bahn. Sprich klares A1-Deutsch. Hilf beim Ticketkauf und Gleisen.',
+    initialDe: 'Guten Tag! Wie kann ich Ihnen helfen? Wohin möchten Sie fahren?',
+    initialDz: 'نهار مبروك! كيفاش نقدر نعاونك؟ فين بغيتي تسافر؟',
+  },
+  buergeramt: {
+    id: 'buergeramt',
+    titleDe: 'Beim Bürgeramt (Anmeldung)',
+    titleDz: 'ف البلدية لتسجيل السكن',
+    context: 'Du bist ein Sachbearbeiter beim Bürgeramt in Deutschland. Frage nach Pass, Termin und Bestätigung auf einfachem A1-Deutsch.',
+    initialDe: 'Guten Tag! Haben Sie einen Termin für die Anmeldung des Wohnsitzes?',
+    initialDz: 'نهار مبروك! واش عندك موعد على قبل تسجيل السكن؟',
+  },
+  ausbildung: {
+    id: 'ausbildung',
+    titleDe: 'Ausbildung Vorstellungsgespräch',
+    titleDz: 'مقابلة التكوين المهني',
+    context: 'Du bist ein Ausbilder in einer deutschen Firma. Führe ein einfaches, ermutigendes Vorstellungsgespräch auf A1/A2-Niveau.',
+    initialDe: 'Guten Tag! Schön, dass Sie da sind. Erzählen Sie: Warum möchten Sie diese Ausbildung machen?',
+    initialDz: 'نهار مبروك! مزيان ملي جيتي. عاود ليا: علاش بغيتي دير هاد التكوين المهني؟',
+  },
+  freetalk: {
+    id: 'freetalk',
+    titleDe: 'Freies Gespräch mit LADA AI',
+    titleDz: 'محادثة حرة مع المساعد الذكي',
+    context: 'Du bist LADA, ein sympathischer Deutschtutor für Marokkaner. Halte eine offene A1-Konversation auf Deutsch und gib Feedback auf Darija.',
+    initialDe: 'Hallo! Wie geht es dir heute? Was machst du gerade?',
+    initialDz: 'أهلاً! كيداير اليوم؟ شنو كدير دابا؟',
+  },
+};
+
+/** Executes live interactive conversation with real-time Darija coaching and grammar tips */
+export async function chatRoleplay(
+  scenarioId: string,
+  history: RoleplayMessage[],
+  userMessage: string
+): Promise<RoleplayResponse> {
+  const scenario = ROLEPLAY_SCENARIOS[scenarioId] ?? ROLEPLAY_SCENARIOS.freetalk;
+
+  if (!hasLiveKey()) {
+    // High quality offline fallback responses
+    return {
+      germanReply: `Sehr gut gesagt! "${userMessage}" ist verständlich. Gibt es noch etwas, das Sie möchten?`,
+      darijaTranslation: 'مزيان بزاف! هادشي لي قلتي مفهوم. واش كاين شي حاجة أخرى بغيتيها؟',
+      grammarCorrection: 'تبارك الله عليك! الجملة ديالك مفهومة. باش نزيدو نضبطوها، ديما ركز بلي الفعل كيجي ف المرتبة 2 ف الجملة الخبرية.',
+      suggestedReplies: [
+        'Ja, ich möchte bitte die Rechnung.',
+        'Nein, danke. Alles ist gut.',
+        'Können Sie das bitte wiederholen?',
+      ],
+    };
+  }
+
+  const systemPrompt = `Du bist ein professioneller Deutschlehrer und Rollenspielpartner für marokkanische Lernende (A1-Niveau).
+Szenario: ${scenario.context}
+Aufgabe:
+1. Antworte auf das Gesagte des Nutzers in natürlichem, einfachem A1-Deutsch (1-2 Sätze).
+2. Übersetze deine deutsche Antwort ins marokkanische Darija (mit arabischen Buchstaben).
+3. Gib ein kurzes, ermutigendes Feedback auf Darija zur Grammatik/Wortwahl des Nutzers (1 Satz).
+4. Schlage 3 passende A1-Antworten vor, die der Nutzer als Nächstes sagen könnte.
+
+Gib NUR valides JSON zurück in folgendem Format:
+{
+  "germanReply": "...",
+  "darijaTranslation": "...",
+  "grammarCorrection": "...",
+  "suggestedReplies": ["...", "...", "..."]
+}`;
+
+  const contents = [
+    ...history.slice(-6).map((m) => ({
+      role: m.role,
+      parts: [{ text: m.text }],
+    })),
+    {
+      role: 'user',
+      parts: [{ text: userMessage.trim().slice(0, 300) }],
+    },
+  ];
+
+  let key = getActiveKey();
+  const execute = async (k: string) => {
+    return fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': k,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: {
+          temperature: 0.6,
+          maxOutputTokens: 380,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+  };
+
+  let res = await execute(key);
+  if (res.status === 429) {
+    rotateKey();
+    const nextK = getActiveKey();
+    if (nextK !== key) {
+      key = nextK;
+      res = await execute(key);
+    }
+  }
+
+  if (!res.ok) {
+    throw new Error(`Roleplay API error (${res.status})`);
+  }
+
+  const data = await res.json();
+  const rawText: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  try {
+    const parsed = JSON.parse(rawText) as RoleplayResponse;
+    if (parsed.germanReply && parsed.darijaTranslation) {
+      return parsed;
+    }
+  } catch {
+    // Fallback if JSON format was slightly malformed
+  }
+
+  return {
+    germanReply: 'Sehr schön! Das habe ich gut verstanden.',
+    darijaTranslation: 'جميل جداً! فهمتك مزيان.',
+    grammarCorrection: 'ممتاز! النطق والتعبير ديالك فالمستوى.',
+    suggestedReplies: [
+      'Danke schön!',
+      'Ich verstehe.',
+      'Wie viel kostet das?',
+    ],
+  };
+}

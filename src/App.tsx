@@ -6,6 +6,9 @@ import Highway, { type HighwayResult } from './components/Highway';
 import Vocal, { type VocalResult } from './components/Vocal';
 import Results from './components/Results';
 import AiVoiceCompanion from './components/AiVoiceCompanion';
+import A1UnitView from './components/A1UnitView';
+import RoleplayPartner from './components/RoleplayPartner';
+import type { A1Unit } from './game/a1Curriculum';
 import { audio } from './game/audio';
 import { ALL_WORDS, TRACKS, findWord, type Track, type Word } from './game/content';
 import { analyzeRun } from './game/ladaCore';
@@ -15,7 +18,7 @@ import {
   type Profile, type RunVerdict,
 } from './game/srs';
 
-type Screen = 'boot' | 'hub' | 'studio' | 'highway' | 'vocal' | 'results';
+type Screen = 'boot' | 'hub' | 'a1Unit' | 'roleplay' | 'studio' | 'highway' | 'vocal' | 'results';
 
 const clone = (p: Profile): Profile => JSON.parse(JSON.stringify(p)) as Profile;
 
@@ -71,6 +74,8 @@ export default function App() {
   const [overall, setOverall] = useState(0);
   const [coachLines, setCoachLines] = useState<string[]>([]);
   const [muted, setMuted] = useState(false);
+  const [selectedA1Unit, setSelectedA1Unit] = useState<A1Unit | null>(null);
+  const [roleplayScenario, setRoleplayScenario] = useState<string>('restaurant');
 
   // keep memory persisted
   useEffect(() => { saveProfile(profile); }, [profile]);
@@ -182,6 +187,32 @@ export default function App() {
             onToggleMute={() => { setMuted((m) => { audio.setMuted(!m); return !m; }); }}
             onDeploy={deploy}
             onRevenge={startRevenge}
+            onSelectA1Unit={(unit) => {
+              setSelectedA1Unit(unit);
+              setScreen('a1Unit');
+            }}
+            onStartRoleplay={(sc) => {
+              if (sc) setRoleplayScenario(sc);
+              setScreen('roleplay');
+            }}
+          />
+        )}
+
+        {screen === 'a1Unit' && selectedA1Unit && (
+          <A1UnitView
+            unit={selectedA1Unit}
+            onExit={() => setScreen('hub')}
+            onStartRoleplay={(sc) => {
+              setRoleplayScenario(sc);
+              setScreen('roleplay');
+            }}
+          />
+        )}
+
+        {screen === 'roleplay' && (
+          <RoleplayPartner
+            initialScenarioId={roleplayScenario}
+            onExit={() => setScreen('hub')}
           />
         )}
 
