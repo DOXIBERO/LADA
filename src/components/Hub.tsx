@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { audio } from '../game/audio';
 import { TRACKS, type Track } from '../game/content';
 import { A1_UNITS, type A1Unit } from '../game/a1Curriculum';
+import { TIKTOK_TRACKS, type TikTokTrack } from '../game/tiktokCourses';
 import { hasLiveKey } from '../game/gemini';
 import { decaySnapshot, isMastered, isUnlocked, type Profile } from '../game/srs';
 
 /* ============================================================
    LADA — COMMAND DECK & LEARNING HUB
-   Primary Goethe A1 Curriculum + AI Voice Roleplay Lab +
-   Optional Arcade Reflex Drills (Highway).
+   Primary Goethe A1 Curriculum + TikTok Creator Masterclasses +
+   AI Voice Roleplay Lab + Optional Arcade Reflex Drills (Highway).
    ============================================================ */
 
 interface Props {
@@ -19,9 +20,10 @@ interface Props {
   onRevenge: (t: Track) => void;
   onSelectA1Unit: (unit: A1Unit) => void;
   onStartRoleplay: (scenarioId?: string) => void;
+  onStartTikTokTrack?: (trackId: string) => void;
 }
 
-type HubTab = 'a1' | 'roleplay' | 'arcade';
+type HubTab = 'a1' | 'tiktok' | 'roleplay' | 'arcade';
 
 export default function Hub({
   profile,
@@ -31,6 +33,7 @@ export default function Hub({
   onRevenge,
   onSelectA1Unit,
   onStartRoleplay,
+  onStartTikTokTrack,
 }: Props) {
   const [hubTab, setHubTab] = useState<HubTab>('a1');
   const snap = decaySnapshot(profile, Date.now());
@@ -78,6 +81,19 @@ export default function Hub({
             <span>🎓</span>
             <span>مسار Goethe A1 المعتمد</span>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan/20 text-cyan">5 وحدات</span>
+          </button>
+
+          <button
+            onClick={() => { audio.uiClick(); setHubTab('tiktok'); }}
+            className={`chamfer-sm px-4 py-2 text-xs md:text-sm font-ar font-bold flex items-center gap-2 border transition-all shrink-0 ${
+              hubTab === 'tiktok'
+                ? 'border-amber bg-amber/15 text-amber shadow-[0_0_15px_rgba(255,179,0,0.25)]'
+                : 'border-line/60 text-dim hover:text-ink'
+            }`}
+          >
+            <span>📱</span>
+            <span>دورات التيك توك & ألماني الشارع</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber/20 text-amber animate-pulse">NEW ✦ 6 مسارات</span>
           </button>
 
           <button
@@ -250,6 +266,103 @@ export default function Hub({
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================
+            SECTION: TIKTOK CREATOR MASTERCLASSES & STREET GERMAN
+           ============================================================ */}
+        {hubTab === 'tiktok' && (
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4 pb-6">
+            <div className="panel chamfer p-4 bg-amber/5 border-amber/30 flex items-center justify-between gap-3 flex-wrap" dir="rtl">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="font-ar text-base md:text-lg font-bold text-ink">
+                    دورات التيك توك & ألماني الشارع (TikTok Creator Academy)
+                  </h2>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber/20 text-amber font-bold animate-pulse">
+                    VIRAL ⚡
+                  </span>
+                </div>
+                <p className="font-ar text-xs md:text-sm text-dim leading-relaxed">
+                  تحليل مستوحى من أشهر قنوات تيك توك لتعلم الألمانية (@easygerman, @doctor.german, @germanwithsarahx, @deutschlernen02...). مقارنات حية بين ألماني الكتوبة وألماني الزنقة!
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {TIKTOK_TRACKS.map((track) => {
+                const colorBorder =
+                  track.color === 'cyan'
+                    ? 'border-cyan/50 hover:border-cyan'
+                    : track.color === 'mag'
+                    ? 'border-mag/50 hover:border-mag'
+                    : track.color === 'lime'
+                    ? 'border-lime/50 hover:border-lime'
+                    : 'border-amber/50 hover:border-amber';
+
+                const badgeColor =
+                  track.color === 'cyan'
+                    ? 'bg-cyan/10 text-cyan border-cyan/40'
+                    : track.color === 'mag'
+                    ? 'bg-mag/10 text-mag border-mag/40'
+                    : track.color === 'lime'
+                    ? 'bg-lime/10 text-lime border-lime/40'
+                    : 'bg-amber/10 text-amber border-amber/40';
+
+                return (
+                  <div
+                    key={track.id}
+                    className={`panel chamfer p-5 bg-panel/90 border transition-all flex flex-col justify-between ${colorBorder}`}
+                  >
+                    <div>
+                      {/* Badge & Creator Style */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded border ${badgeColor}`}>
+                          {track.badge}
+                        </span>
+                        <span className="text-[11px] font-mono text-dim">
+                          {track.lessons.length} كبسولات تفاعلية
+                        </span>
+                      </div>
+
+                      {/* Titles */}
+                      <h3 className="font-ar text-lg md:text-xl font-bold text-ink mb-1 text-right" dir="rtl">
+                        {track.titleDz}
+                      </h3>
+                      <div className="font-display text-sm text-dim mb-2 text-right" dir="ltr">
+                        {track.titleDe}
+                      </div>
+
+                      {/* Creator attribution */}
+                      <div className="chamfer-sm bg-panel2/70 border border-line/40 px-2.5 py-1 text-xs font-mono text-cyan mb-3 text-right" dir="rtl">
+                        👨‍🏫 <span className="text-dim">مستوحى من:</span> <span className="font-bold">{track.creatorStyle}</span>
+                      </div>
+
+                      {/* Description */}
+                      <p className="font-ar text-xs md:text-sm text-dim leading-relaxed text-right" dir="rtl">
+                        {track.descriptionDz}
+                      </p>
+                    </div>
+
+                    {/* Launch Button */}
+                    <button
+                      onClick={() => {
+                        audio.ensure();
+                        audio.uiOpen();
+                        if (onStartTikTokTrack) {
+                          onStartTikTokTrack(track.id);
+                        }
+                      }}
+                      className="mt-5 neon-btn neon-btn-amber chamfer py-2.5 text-xs md:text-sm font-ar font-bold flex items-center justify-center gap-2"
+                    >
+                      <span>▶</span>
+                      <span>ابدأ هاد المسار التفاعلي</span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

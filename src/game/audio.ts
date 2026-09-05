@@ -306,6 +306,9 @@ class LadaAudio {
     }
   }
 
+  correct() { this.perfect(5); }
+  wrong() { this.miss(); }
+
   countTick(final = false) {
     this.tone(0, final ? 1560 : 780, final ? 1560 : 780, final ? 0.22 : 0.08, 'square', 0.12);
   }

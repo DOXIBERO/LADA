@@ -8,6 +8,7 @@ import Results from './components/Results';
 import AiVoiceCompanion from './components/AiVoiceCompanion';
 import A1UnitView from './components/A1UnitView';
 import RoleplayPartner from './components/RoleplayPartner';
+import TikTokCourseView from './components/TikTokCourseView';
 import type { A1Unit } from './game/a1Curriculum';
 import { audio } from './game/audio';
 import { ALL_WORDS, TRACKS, findWord, type Track, type Word } from './game/content';
@@ -18,7 +19,7 @@ import {
   type Profile, type RunVerdict,
 } from './game/srs';
 
-type Screen = 'boot' | 'hub' | 'a1Unit' | 'roleplay' | 'studio' | 'highway' | 'vocal' | 'results';
+type Screen = 'boot' | 'hub' | 'a1Unit' | 'tiktokCourse' | 'roleplay' | 'studio' | 'highway' | 'vocal' | 'results';
 
 const clone = (p: Profile): Profile => JSON.parse(JSON.stringify(p)) as Profile;
 
@@ -76,6 +77,7 @@ export default function App() {
   const [muted, setMuted] = useState(false);
   const [selectedA1Unit, setSelectedA1Unit] = useState<A1Unit | null>(null);
   const [roleplayScenario, setRoleplayScenario] = useState<string>('restaurant');
+  const [activeTikTokTrackId, setActiveTikTokTrackId] = useState<string>('street_vs_textbook');
 
   // keep memory persisted
   useEffect(() => { saveProfile(profile); }, [profile]);
@@ -195,6 +197,10 @@ export default function App() {
               if (sc) setRoleplayScenario(sc);
               setScreen('roleplay');
             }}
+            onStartTikTokTrack={(tId) => {
+              setActiveTikTokTrackId(tId);
+              setScreen('tiktokCourse');
+            }}
           />
         )}
 
@@ -206,6 +212,13 @@ export default function App() {
               setRoleplayScenario(sc);
               setScreen('roleplay');
             }}
+          />
+        )}
+
+        {screen === 'tiktokCourse' && (
+          <TikTokCourseView
+            trackId={activeTikTokTrackId}
+            onExit={() => setScreen('hub')}
           />
         )}
 
