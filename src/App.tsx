@@ -5,11 +5,13 @@ import Studio from './components/Studio';
 import Highway, { type HighwayResult } from './components/Highway';
 import Vocal, { type VocalResult } from './components/Vocal';
 import Results from './components/Results';
+import AiVoiceCompanion from './components/AiVoiceCompanion';
 import { audio } from './game/audio';
 import { ALL_WORDS, TRACKS, findWord, type Track, type Word } from './game/content';
 import { analyzeRun } from './game/ladaCore';
+import { narrator } from './game/narrator';
 import {
-  allMastered, loadProfile, record, registerRun, saveProfile, weakest,
+  allMastered, isMastered, isUnlocked, loadProfile, record, registerRun, saveProfile, weakest,
   type Profile, type RunVerdict,
 } from './game/srs';
 
@@ -72,6 +74,15 @@ export default function App() {
 
   // keep memory persisted
   useEffect(() => { saveProfile(profile); }, [profile]);
+
+  // Autonomous Hub narration when landing on Command Deck
+  useEffect(() => {
+    if (screen === 'hub') {
+      const nextIdx = TRACKS.findIndex((t) => isUnlocked(profile, t) && !isMastered(profile, t));
+      const nextT = TRACKS[nextIdx] ?? TRACKS[0];
+      narrator.narrateHub(nextT);
+    }
+  }, [screen, profile]);
 
   const deploy = useCallback((t: Track) => {
     setWeakWords(weakest(profile, ALL_WORDS, 6));
@@ -210,6 +221,9 @@ export default function App() {
             onHub={() => setScreen('hub')}
           />
         )}
+
+        {/* Global Autonomous AI Voice Companion (hands-free Darija guidance) */}
+        {screen !== 'boot' && <AiVoiceCompanion />}
 
       </div>
     </ErrorBoundary>

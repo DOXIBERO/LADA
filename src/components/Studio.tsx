@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { audio } from '../game/audio';
 import { askTutor, getApiKey, hasLiveKey, setApiKey } from '../game/gemini';
 import { TRAPS, hashStr, mulberry32, type Track } from '../game/content';
+import { narrator } from '../game/narrator';
 
 /* ============================================================
    LEVEL 1 — THE A0 LESSON (dars b dars)
@@ -32,7 +33,33 @@ export default function Studio({ track, onReady, onExit }: Props) {
   const [keySaved, setKeySaved] = useState(hasLiveKey());
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch { /* noop */ } }, []);
+  useEffect(() => () => {
+    narrator.stop();
+    try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
+  }, []);
+
+  // Autonomous AI Voice Narration for Lesson Steps
+  useEffect(() => {
+    if (phase === 'learn') {
+      narrator.narrateStep(track, stepIdx);
+    }
+  }, [track, phase, stepIdx]);
+
+  // Autonomous Narration for Checkpoint Quiz
+  useEffect(() => {
+    if (phase === 'quiz' && !quizDone && rounds[ri]) {
+      if (ri === 0) {
+        narrator.narrateQuizIntro(track);
+        const timer = window.setTimeout(() => {
+          if (rounds[0]) narrator.narrateQuizQuestion(0, rounds.length, rounds[0].de);
+        }, 2800);
+        return () => window.clearTimeout(timer);
+      } else {
+        narrator.narrateQuizQuestion(ri, rounds.length, rounds[ri].de);
+      }
+    }
+  }, [track, phase, ri, quizDone, rounds]);
+
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, busy, chatOpen]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -66,13 +93,15 @@ export default function Studio({ track, onReady, onExit }: Props) {
     if (!round) return;
     if (opt === round.correct) {
       setRight(opt); audio.grade(90);
+      narrator.narrateQuizFeedback(true, round.mnemonic, round.de);
       window.setTimeout(() => {
         setRight(null); setWrong(null);
         if (ri + 1 >= rounds.length) { setQuizDone(true); audio.win(); }
         else { setRi(ri + 1); audio.uiOpen(); }
-      }, 700);
+      }, 950);
     } else {
       setWrong(opt); audio.miss();
+      narrator.narrateQuizFeedback(false, round.mnemonic, round.de);
       window.setTimeout(() => setWrong(null), 550);
     }
   };

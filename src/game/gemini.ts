@@ -12,6 +12,8 @@
 const KEY_STORAGE = 'lada_gemini_key';
 const MODEL = 'gemini-2.5-flash';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const TTS_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
 
 export function getApiKey(): string {
   try { return localStorage.getItem(KEY_STORAGE) ?? ''; } catch { return ''; }
@@ -121,4 +123,70 @@ export async function askTutor(userPrompt: string, extraContext = ''): Promise<s
   const text: string = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? '';
   if (!text.trim()) throw new Error('jawb khawi');
   return text.trim();
+}
+
+const pcmAudioCache = new Map<string, string>();
+
+/** Synthesizes speech using Google AI Studio Gemini TTS (24kHz linear PCM). Caches responses. */
+export async function synthesizeGeminiVoice(text: string, voiceName = 'Puck'): Promise<string> {
+  const cleanText = text.trim().slice(0, 450);
+  if (!cleanText) throw new Error('empty-text');
+
+  const cacheKey = `${voiceName}:${cleanText}`;
+  if (pcmAudioCache.has(cacheKey)) {
+    return pcmAudioCache.get(cacheKey)!;
+  }
+
+  let key = getActiveKey();
+  if (!key || !hasLiveKey()) throw new Error('no-key');
+
+  const executeCall = async (apiKey: string) => {
+    return fetch(TTS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: cleanText }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName }
+            }
+          }
+        }
+      }),
+    });
+  };
+
+  let res = await executeCall(key);
+
+  if (res.status === 429) {
+    rotateKey();
+    const nextKey = getActiveKey();
+    if (nextKey !== key) {
+      key = nextKey;
+      res = await executeCall(key);
+    }
+  }
+
+  if (!res.ok) {
+    throw new Error(`TTS API error (${res.status})`);
+  }
+
+  const data = await res.json();
+  const part = data?.candidates?.[0]?.content?.parts?.[0];
+  const pcmBase64: string = part?.inlineData?.data ?? '';
+  if (!pcmBase64) throw new Error('no-audio-data');
+
+  // Cache up to 80 voice clips
+  if (pcmAudioCache.size >= 80) {
+    const firstKey = pcmAudioCache.keys().next().value;
+    if (firstKey) pcmAudioCache.delete(firstKey);
+  }
+  pcmAudioCache.set(cacheKey, pcmBase64);
+
+  return pcmBase64;
 }

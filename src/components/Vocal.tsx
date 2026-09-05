@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../game/audio';
 import { TRAPS, type Track, type Word } from '../game/content';
 import { vocalFeedback } from '../game/ladaCore';
+import { narrator } from '../game/narrator';
 
 /* ============================================================
    LEVEL 3 — THE VOCAL ARENA
@@ -100,6 +101,11 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
   const word = words[wi];
   const base = 165 + (wi % 3) * 32;
   const bandLo = base * 0.85, bandHi = base * 1.28;
+
+  useEffect(() => {
+    narrator.narrateVocal(track, words[0]);
+    return () => { narrator.stop(); };
+  }, [track, words]);
 
   const enterPhase = useCallback((p: Phase, wIdx: number) => {
     phaseRef.current = p;

@@ -14,6 +14,10 @@ class LadaAudio {
   private master!: GainNode;
   private music!: GainNode;
   private sfxBus!: GainNode;
+  private voiceBus!: GainNode;
+  private currentVoiceNode: AudioBufferSourceNode | null = null;
+  private voiceActive = false;
+  private voiceListeners: ((active: boolean) => void)[] = [];
   private delayIn!: GainNode;
   private noise!: AudioBuffer;
   private timer: number | null = null;
@@ -25,6 +29,7 @@ class LadaAudio {
   private _intensity = 0; // 0..1 extra layers
   muted = false;
   private deVoice: SpeechSynthesisVoice | null = null;
+  private arVoice: SpeechSynthesisVoice | null = null;
 
   /* ---------- lifecycle ---------- */
   init() {
@@ -70,6 +75,10 @@ class LadaAudio {
     this.sfxBus.connect(sfxLimiter);
     sfxLimiter.connect(this.master);
 
+    this.voiceBus = this.ctx.createGain();
+    this.voiceBus.gain.value = 1.0;
+    this.voiceBus.connect(this.master);
+
     // space delay for arp / plucks
     const delay = this.ctx.createDelay(1);
     delay.delayTime.value = 0.29;
@@ -85,11 +94,13 @@ class LadaAudio {
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 
-    // german voice
+    // voice discovery: German and Arabic voices
     const pick = () => {
       const vs = window.speechSynthesis?.getVoices() ?? [];
       this.deVoice = vs.find((v) => v.lang?.toLowerCase().startsWith('de') && /google/i.test(v.name))
         ?? vs.find((v) => v.lang?.toLowerCase().startsWith('de')) ?? null;
+      this.arVoice = vs.find((v) => (v.lang?.toLowerCase().startsWith('ar-ma') || v.lang?.toLowerCase().startsWith('ar')) && /google/i.test(v.name))
+        ?? vs.find((v) => v.lang?.toLowerCase().startsWith('ar-ma') || v.lang?.toLowerCase().startsWith('ar')) ?? null;
     };
     pick();
     window.speechSynthesis?.addEventListener?.('voiceschanged', pick);
@@ -324,7 +335,88 @@ class LadaAudio {
 
   lose() { [392, 330, 262, 196].forEach((f, i) => this.tone(i * 0.14, f, f * 0.98, 0.3, 'sawtooth', 0.14)); }
 
-  /* ---------- german TTS ---------- */
+  /* ---------- Voice & PCM Audio Playback ---------- */
+  get isVoicePlaying() { return this.voiceActive; }
+
+  onVoiceState(cb: (active: boolean) => void) {
+    this.voiceListeners.push(cb);
+    return () => { this.voiceListeners = this.voiceListeners.filter((l) => l !== cb); };
+  }
+
+  private setVoiceActive(active: boolean) {
+    this.voiceActive = active;
+    for (const l of this.voiceListeners) {
+      try { l(active); } catch { /* noop */ }
+    }
+  }
+
+  stopVoice() {
+    if (this.currentVoiceNode) {
+      try {
+        this.currentVoiceNode.stop();
+        this.currentVoiceNode.disconnect();
+      } catch { /* noop */ }
+      this.currentVoiceNode = null;
+    }
+    if (this.ctx && this.music) {
+      this.music.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.music.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.08);
+    }
+    this.setVoiceActive(false);
+    try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
+  }
+
+  /** Decodes raw 16-bit linear PCM (base64, 24kHz) from Gemini TTS and plays through voiceBus with music ducking */
+  async playPcmBase64(base64Data: string, sampleRate = 24000): Promise<void> {
+    this.ensure();
+    if (!this.ctx) return;
+    this.stopVoice();
+
+    const binaryString = window.atob(base64Data);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const int16 = new Int16Array(bytes.buffer);
+    const float32 = new Float32Array(int16.length);
+    for (let i = 0; i < int16.length; i++) {
+      float32[i] = int16[i] / 32768.0;
+    }
+
+    const audioBuf = this.ctx.createBuffer(1, float32.length, sampleRate);
+    audioBuf.getChannelData(0).set(float32);
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(this.voiceBus);
+
+    // Duck synth background music smoothly
+    if (this.music && this.ctx) {
+      this.music.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.music.gain.setTargetAtTime(0.18, this.ctx.currentTime, 0.08);
+    }
+
+    this.currentVoiceNode = src;
+    this.setVoiceActive(true);
+
+    return new Promise<void>((resolve) => {
+      src.onended = () => {
+        if (this.currentVoiceNode === src) {
+          this.currentVoiceNode = null;
+          this.setVoiceActive(false);
+          if (this.music && this.ctx) {
+            this.music.gain.cancelScheduledValues(this.ctx.currentTime);
+            this.music.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.2);
+          }
+        }
+        resolve();
+      };
+      src.start(0);
+    });
+  }
+
+  /* ---------- Web Speech TTS Fallback ---------- */
   get ttsReady() { return 'speechSynthesis' in window; }
 
   speak(text: string, rate = 0.85) {
@@ -342,6 +434,53 @@ class LadaAudio {
 
   speakSequence(words: string[], gapMs = 1000) {
     words.forEach((w, i) => window.setTimeout(() => this.speak(w), i * gapMs));
+  }
+
+  /** Dual-voice Web Speech fallback: Speaks Darija in Arabic voice and German words with German voice */
+  speakBilingualWebSpeech(darijaText: string, germanWord?: string): Promise<void> {
+    if (!this.ttsReady) return Promise.resolve();
+    this.stopVoice();
+    this.setVoiceActive(true);
+
+    return new Promise<void>((resolve) => {
+      try {
+        const uAr = new SpeechSynthesisUtterance(darijaText);
+        uAr.lang = 'ar-SA';
+        if (this.arVoice) uAr.voice = this.arVoice;
+        uAr.rate = 0.95;
+
+        uAr.onend = () => {
+          if (germanWord) {
+            const uDe = new SpeechSynthesisUtterance(germanWord);
+            uDe.lang = 'de-DE';
+            if (this.deVoice) uDe.voice = this.deVoice;
+            uDe.rate = 0.85;
+            uDe.onend = () => {
+              this.setVoiceActive(false);
+              resolve();
+            };
+            uDe.onerror = () => {
+              this.setVoiceActive(false);
+              resolve();
+            };
+            window.speechSynthesis.speak(uDe);
+          } else {
+            this.setVoiceActive(false);
+            resolve();
+          }
+        };
+
+        uAr.onerror = () => {
+          this.setVoiceActive(false);
+          resolve();
+        };
+
+        window.speechSynthesis.speak(uAr);
+      } catch {
+        this.setVoiceActive(false);
+        resolve();
+      }
+    });
   }
 }
 

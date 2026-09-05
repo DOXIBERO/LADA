@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../game/audio';
 import { mulberry32, hashStr, type Track, type Word } from '../game/content';
 import { pairHint } from '../game/ladaCore';
+import { narrator } from '../game/narrator';
 
 /* ============================================================
    LEVEL 2 — THE CYBER HIGHWAY
@@ -125,12 +126,13 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
 
   useEffect(() => {
     restart();
+    narrator.narrateHighway(track);
     const onKey = (e: KeyboardEvent) => {
       if (['ArrowLeft', 'ArrowRight', ' ', 'a', 'd', 'A', 'D'].includes(e.key)) e.preventDefault();
       if (e.repeat) return;
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') steer(-1);
-      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') steer(1);
-      else if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') togglePause();
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') steer(1);
+      if (e.key === ' ') togglePause();
     };
     window.addEventListener('keydown', onKey);
     const onResize = () => {
@@ -162,9 +164,10 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', onResize);
       audio.stopMusic();
+      narrator.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restart, steer, togglePause]);
+  }, [restart, steer, togglePause, track]);
 
   /* ---------------- game logic ---------------- */
   function update(st: NonNullable<typeof stRef.current>, dt: number) {

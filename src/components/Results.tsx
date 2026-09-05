@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { audio } from '../game/audio';
 import { PASS_ACC, type Track, type Word } from '../game/content';
+import { narrator } from '../game/narrator';
 import type { HighwayResult } from './Highway';
 import type { VocalResult } from './Vocal';
 import type { RunVerdict } from '../game/srs';
@@ -30,7 +31,11 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
   useEffect(() => {
     const id = window.setTimeout(() => setRingOn(true), 120);
     if (verdict.passed) audio.win(); else audio.lose();
-    return () => window.clearTimeout(id);
+    narrator.narrateResults(verdict.passed, overall, mode);
+    return () => {
+      window.clearTimeout(id);
+      narrator.stop();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
