@@ -152,13 +152,15 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
   // mic setup
   useEffect(() => {
     let stream: MediaStream | null = null;
+    let micCtx: AudioContext | null = null;
     (async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
         audio.ensure();
-        const ctx = new AudioContext();
-        const src = ctx.createMediaStreamSource(stream);
-        const an = ctx.createAnalyser();
+        const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        micCtx = new Ctx();
+        const src = micCtx.createMediaStreamSource(stream);
+        const an = micCtx.createAnalyser();
         an.fftSize = 2048;
         src.connect(an);
         analyserRef.current = an;
@@ -169,7 +171,12 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
         setMic('off');
       }
     })();
-    return () => { stream?.getTracks().forEach((t) => t.stop()); };
+    return () => {
+      stream?.getTracks().forEach((t) => t.stop());
+      if (micCtx && micCtx.state !== 'closed') {
+        void micCtx.close().catch(() => undefined);
+      }
+    };
   }, []);
 
   // start
@@ -451,6 +458,23 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* mobile & click tap button */}
+        <div className="mt-3">
+          <button
+            type="button"
+            onPointerDown={(e) => { e.preventDefault(); tap(); }}
+            disabled={phase !== 'live'}
+            aria-label="دق السيلابات"
+            className={`w-full py-3 px-4 chamfer-sm font-ar text-base md:text-lg font-bold transition-all flex items-center justify-center gap-2 border ${
+              phase === 'live'
+                ? 'bg-lime/20 border-lime text-lime shadow-[0_0_15px_rgba(182,255,46,0.35)] cursor-pointer active:scale-95'
+                : 'bg-panel2/40 border-line text-dim cursor-not-allowed'
+            }`}
+          >
+            <span>{phase === 'live' ? '⚡ دق الإيقاع دابا (TAP / SPACE)' : phase === 'intro' ? 'سْمع النُّطق أولاً...' : 'تحليل الصوت...'}</span>
+          </button>
         </div>
 
         {/* progress + hint */}

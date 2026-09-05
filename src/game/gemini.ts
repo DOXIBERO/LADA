@@ -18,7 +18,13 @@ export function getApiKey(): string {
 }
 
 export function setApiKey(key: string): void {
-  try { localStorage.setItem(KEY_STORAGE, key.trim()); } catch { /* private mode */ }
+  try {
+    const trimmed = key.trim();
+    // Google AI Studio keys start with AIza and are base64-like strings
+    if (trimmed === '' || /^AIza[0-9A-Za-z_-]{30,50}$/.test(trimmed)) {
+      localStorage.setItem(KEY_STORAGE, trimmed);
+    }
+  } catch { /* private mode */ }
 }
 
 export function clearApiKey(): void {
@@ -27,7 +33,8 @@ export function clearApiKey(): void {
 
 /** A usable Google AI Studio key starts with AIza */
 export function hasLiveKey(): boolean {
-  return getApiKey().startsWith('AIza');
+  const k = getApiKey();
+  return k.startsWith('AIza') && k.length >= 35;
 }
 
 export const TUTOR_SYSTEM = `Nta hiya LADA — tuteur dyal l-Almaniya l l-Mgharba li kaybdaw mn SIFR (A0).
@@ -40,23 +47,27 @@ export const TUTOR_SYSTEM = `Nta hiya LADA — tuteur dyal l-Almaniya l l-Mgharb
 /** One-shot live tutor call. Throws on missing key / network / quota. */
 export async function askTutor(userPrompt: string, extraContext = ''): Promise<string> {
   const key = getApiKey();
-  if (!key) throw new Error('no-key');
+  if (!key || !hasLiveKey()) throw new Error('no-key');
 
-  const res = await fetch(`${ENDPOINT}?key=${key}`, {
+  const cleanPrompt = userPrompt.trim().slice(0, 300);
+  if (!cleanPrompt) throw new Error('so2al khawi');
+
+  const cleanContext = extraContext.trim().slice(0, 500);
+
+  const res = await fetch(`${ENDPOINT}?key=${encodeURIComponent(key)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: TUTOR_SYSTEM + (extraContext ? `\n\nCONTEXT DYAL DARS:\n${extraContext}` : '') }] },
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      systemInstruction: { parts: [{ text: TUTOR_SYSTEM + (cleanContext ? `\n\nCONTEXT DYAL DARS:\n${cleanContext}` : '') }] },
+      contents: [{ role: 'user', parts: [{ text: cleanPrompt }] }],
       generationConfig: { temperature: 0.7, maxOutputTokens: 220 },
     }),
   });
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => '');
     if (res.status === 429) throw new Error('quota — l-mifta7 wsel l-limit, tsenna chwiya');
     if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('mifta7 machi sa7i7 — check AIza...');
-    throw new Error(`API ${res.status}: ${detail.slice(0, 90)}`);
+    throw new Error(`API error (${res.status})`);
   }
 
   const data = await res.json();

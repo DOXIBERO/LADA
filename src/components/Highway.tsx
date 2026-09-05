@@ -211,22 +211,36 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
       }
     }
 
-    // particles
+    // particles (O(1) swap-and-pop removal to eliminate GC pause spikes)
     for (let i = st.particles.length - 1; i >= 0; i--) {
       const p = st.particles[i];
       p.life -= dt;
-      if (p.life <= 0) { st.particles.splice(i, 1); continue; }
+      if (p.life <= 0) {
+        const last = st.particles.pop();
+        if (last && i < st.particles.length) st.particles[i] = last;
+        continue;
+      }
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (!p.ring) p.vy += 160 * dt;
     }
     for (let i = st.popups.length - 1; i >= 0; i--) {
       const p = st.popups[i];
       p.life -= dt; p.y -= 34 * dt;
-      if (p.life <= 0) st.popups.splice(i, 1);
+      if (p.life <= 0) {
+        const last = st.popups.pop();
+        if (last && i < st.popups.length) st.popups[i] = last;
+        continue;
+      }
     }
     st.shake = Math.max(0, st.shake - dt * 34);
     st.flash = Math.max(0, st.flash - dt * 2.6);
     st.glitch = Math.max(0, st.glitch - 1);
+
+    // Photosensitivity & reduced motion protection
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      st.shake = 0;
+      st.flash = 0;
+    }
 
     // thruster
     if (st.particles.length < 200 && Math.random() < 0.7) {
@@ -458,6 +472,7 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
         ctx.fillStyle = near ? '#ffffff' : `rgba(0,240,255,${0.55 + t * 0.45})`;
         ctx.font = `700 ${fs}px "Noto Kufi Arabic", sans-serif`;
         ctx.textAlign = 'center';
+        ctx.direction = 'rtl';
         ctx.fillText(g.ev.lanes[lane], cx, y - gateH + gateH * 0.28);
       }
       // approach chevron under the live gate row
@@ -660,8 +675,30 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
         <span className="hidden md:inline border border-line px-2 py-0.5 text-amber font-body tracking-widest">ESC ⏸</span>
       </div>
 
+      {/* mobile touch steering controls */}
+      <div className="md:hidden absolute inset-x-0 bottom-12 flex items-center justify-between px-6 pointer-events-none z-30">
+        <button
+          type="button"
+          aria-label="سوق لليسر (Steer Left)"
+          onPointerDown={(e) => { e.stopPropagation(); steer(-1); }}
+          className="pointer-events-auto w-16 h-16 rounded-full bg-void/80 border-2 border-cyan/70 text-cyan text-3xl font-display flex items-center justify-center active:scale-90 active:bg-cyan/30 shadow-[0_0_15px_rgba(0,240,255,0.4)] select-none"
+        >
+          ◀
+        </button>
+        <button
+          type="button"
+          aria-label="سوق لليمن (Steer Right)"
+          onPointerDown={(e) => { e.stopPropagation(); steer(1); }}
+          className="pointer-events-auto w-16 h-16 rounded-full bg-void/80 border-2 border-cyan/70 text-cyan text-3xl font-display flex items-center justify-center active:scale-90 active:bg-cyan/30 shadow-[0_0_15px_rgba(0,240,255,0.4)] select-none"
+        >
+          ▶
+        </button>
+      </div>
+
       <button
+        type="button"
         onClick={togglePause}
+        aria-label={paused ? 'Resume highway run' : 'Pause highway run'}
         className="absolute bottom-3 right-3 md:bottom-5 md:right-5 neon-btn chamfer-sm px-4 py-2 text-xs"
       >
         {paused ? 'RESUME' : 'PAUSE'}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Component, useCallback, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import Boot from './components/Boot';
 import Hub from './components/Hub';
 import Studio from './components/Studio';
@@ -16,6 +16,47 @@ import {
 type Screen = 'boot' | 'hub' | 'studio' | 'highway' | 'vocal' | 'results';
 
 const clone = (p: Profile): Profile => JSON.parse(JSON.stringify(p)) as Profile;
+
+interface ErrorBoundaryProps { children: ReactNode }
+interface ErrorBoundaryState { hasError: boolean; error: Error | null }
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('LADA Application Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-dvh w-full bg-void text-ink flex items-center justify-center p-6 select-none font-ar" dir="rtl">
+          <div className="panel chamfer p-8 max-w-md w-full text-center border-mag/60 shadow-[0_0_30px_rgba(255,45,120,0.3)]">
+            <div className="panel-tag text-mag mb-2">SYSTEM ERROR // خطأ في النظام</div>
+            <h2 className="text-2xl font-display text-mag text-glow-mag mb-4">وقع مشكل تقني</h2>
+            <p className="text-dim text-sm mb-6 leading-relaxed">
+              وقع استثناء غير متوقع فالـ Engine ديال اللعبة. الذاكرة ديالك باقية محفوظة ومحمية فالـ LocalStorage.
+            </p>
+            <button
+              onClick={() => { window.location.reload(); }}
+              className="neon-btn neon-btn-mag chamfer px-6 py-3 w-full text-base font-bold"
+            >
+              🔄 إعادة تشغيل LADA
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('boot');
@@ -107,56 +148,70 @@ export default function App() {
   const hasNext = !!session && TRACKS.findIndex((t) => t.id === session.track.id) < TRACKS.length - 1;
 
   return (
-    <div className="h-dvh w-full overflow-hidden bg-void text-ink font-body">
-      {screen === 'boot' && <Boot onStart={() => setScreen('hub')} />}
+    <ErrorBoundary>
+      <div className="h-dvh w-full overflow-hidden bg-void text-ink font-body relative">
+        {/* Floating global mute toggle accessible on all active screens */}
+        {screen !== 'boot' && screen !== 'hub' && (
+          <button
+            type="button"
+            onClick={() => { setMuted((m) => { const next = !m; audio.setMuted(next); return next; }); audio.uiClick(); }}
+            aria-label={muted ? 'Unmute audio' : 'Mute audio'}
+            className="fixed top-2.5 right-2.5 z-50 neon-btn chamfer-sm px-2.5 py-1 text-xs bg-void/85 backdrop-blur-sm border border-line hover:border-cyan"
+          >
+            {muted ? '🔇' : '🔊'}
+          </button>
+        )}
 
-      {screen === 'hub' && (
-        <Hub
-          profile={profile}
-          muted={muted}
-          onToggleMute={() => { setMuted((m) => { audio.setMuted(!m); return !m; }); }}
-          onDeploy={deploy}
-          onRevenge={startRevenge}
-        />
-      )}
+        {screen === 'boot' && <Boot onStart={() => setScreen('hub')} />}
 
-      {screen === 'studio' && session && (
-        <Studio track={session.track} onReady={() => setScreen('highway')} onExit={() => setScreen('hub')} />
-      )}
+        {screen === 'hub' && (
+          <Hub
+            profile={profile}
+            muted={muted}
+            onToggleMute={() => { setMuted((m) => { audio.setMuted(!m); return !m; }); }}
+            onDeploy={deploy}
+            onRevenge={startRevenge}
+          />
+        )}
 
-      {screen === 'highway' && session && (
-        <Highway
-          key={`${session.track.id}-${session.mode}-${Date.now() % 100000}`}
-          track={session.track}
-          mode={session.mode}
-          weakWords={weakWords}
-          onFinish={onHighwayFinish}
-          onExit={() => setScreen('hub')}
-        />
-      )}
+        {screen === 'studio' && session && (
+          <Studio track={session.track} onReady={() => setScreen('highway')} onExit={() => setScreen('hub')} />
+        )}
 
-      {screen === 'vocal' && session && (
-        <Vocal track={session.track} weakWords={weakWords} onFinish={onVocalFinish} />
-      )}
+        {screen === 'highway' && session && (
+          <Highway
+            key={`${session.track.id}-${session.mode}-${Date.now() % 100000}`}
+            track={session.track}
+            mode={session.mode}
+            weakWords={weakWords}
+            onFinish={onHighwayFinish}
+            onExit={() => setScreen('hub')}
+          />
+        )}
 
-      {screen === 'results' && session && verdict && (
-        <Results
-          track={session.track}
-          mode={session.mode}
-          hw={hw}
-          vocal={vocal}
-          overall={overall}
-          verdict={verdict}
-          coachLines={coachLines}
-          hasNext={hasNext}
-          allDone={allMastered(profile)}
-          onRetry={retry}
-          onRevenge={() => session && startRevenge(session.track)}
-          onNext={nextTrack}
-          onHub={() => setScreen('hub')}
-        />
-      )}
+        {screen === 'vocal' && session && (
+          <Vocal track={session.track} weakWords={weakWords} onFinish={onVocalFinish} />
+        )}
 
-    </div>
+        {screen === 'results' && session && verdict && (
+          <Results
+            track={session.track}
+            mode={session.mode}
+            hw={hw}
+            vocal={vocal}
+            overall={overall}
+            verdict={verdict}
+            coachLines={coachLines}
+            hasNext={hasNext}
+            allDone={allMastered(profile)}
+            onRetry={retry}
+            onRevenge={() => session && startRevenge(session.track)}
+            onNext={nextTrack}
+            onHub={() => setScreen('hub')}
+          />
+        )}
+
+      </div>
+    </ErrorBoundary>
   );
 }

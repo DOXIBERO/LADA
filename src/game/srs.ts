@@ -48,7 +48,8 @@ export function saveProfile(p: Profile) {
 export function retention(stat: WordStat | undefined, now: number): number {
   if (!stat || stat.last <= 0) return 0;
   const S = Math.max(stat.S, 0.1 * H);
-  return Math.exp(-(now - stat.last) / S);
+  const delta = Math.max(0, now - stat.last);
+  return Math.exp(-delta / S);
 }
 
 export function isCritical(stat: WordStat | undefined, now: number): boolean {

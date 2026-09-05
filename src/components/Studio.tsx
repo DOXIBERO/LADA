@@ -121,7 +121,7 @@ export default function Studio({ track, onReady, onExit }: Props) {
         {/* header */}
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <button onClick={onExit} className="neon-btn chamfer-sm px-3 py-2 text-xs shrink-0">◀</button>
+            <button onClick={onExit} aria-label="Exit to Command Deck" className="neon-btn chamfer-sm px-3 py-2 text-xs shrink-0">◀</button>
             <div className="min-w-0">
               <div className="panel-tag">{track.tier} · LEVEL 1</div>
               <div className="font-ar text-2xl md:text-3xl text-ink leading-tight truncate">
@@ -281,7 +281,7 @@ export default function Studio({ track, onReady, onExit }: Props) {
                 {hasLiveKey() ? 'Gemini · laif' : 'LADA CORE · offline'}
               </div>
             </div>
-            <button onClick={() => setChatOpen(false)} className="neon-btn chamfer-sm px-3 py-1.5 text-xs">✕</button>
+            <button onClick={() => setChatOpen(false)} aria-label="Close tutor chat" className="neon-btn chamfer-sm px-3 py-1.5 text-xs">✕</button>
           </div>
 
           {!keySaved && (
@@ -304,13 +304,13 @@ export default function Studio({ track, onReady, onExit }: Props) {
 
           <div className="flex-1 overflow-y-auto px-4 py-3 grid content-start gap-2">
             {msgs.length === 0 && (
-              <p className="font-ar text-dim text-[15px] leading-relaxed">
+              <p className="font-ar text-dim text-[15px] leading-relaxed" dir="auto">
                 السلام! سولني على أي كلمة ولا قاعدة فهاد الدرس — <span className="text-ink">{track.title}</span>.
                 <br />مثلا: «كيفاش ننطق schön؟»
               </p>
             )}
             {msgs.map((m, i) => (
-              <div key={i} className={`chamfer-sm px-3 py-2 font-ar text-[15px] leading-relaxed whitespace-pre-line ${m.role === 'user' ? 'bg-cyan/10 border border-cyan/30 text-ink self-end' : 'bg-panel2 border border-line text-ink'}`}>
+              <div key={i} dir="auto" className={`chamfer-sm px-3 py-2 font-ar text-[15px] leading-relaxed whitespace-pre-line ${m.role === 'user' ? 'bg-cyan/10 border border-cyan/30 text-ink self-end' : 'bg-panel2 border border-line text-ink'}`}>
                 {m.text}
               </div>
             ))}
@@ -324,9 +324,10 @@ export default function Studio({ track, onReady, onExit }: Props) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
               placeholder="سول هنا بالدارجة…"
+              dir="auto"
               className="flex-1 chamfer-sm bg-panel2 border border-line px-3 py-2.5 font-ar text-[15px] text-ink outline-none focus:border-cyan"
             />
-            <button onClick={send} disabled={busy} className="neon-btn chamfer-sm px-5 py-2 text-sm">▶</button>
+            <button onClick={send} disabled={busy} aria-label="Send message to AI tutor" className="neon-btn chamfer-sm px-5 py-2 text-sm">▶</button>
           </div>
         </div>
       )}

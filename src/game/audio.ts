@@ -31,9 +31,28 @@ class LadaAudio {
     if (this.ctx) return;
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new Ctx();
+
+    // Master bus dynamics compressor to prevent digital clipping
+    const compressor = this.ctx.createDynamicsCompressor();
+    compressor.threshold.value = -6;
+    compressor.knee.value = 12;
+    compressor.ratio.value = 8;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.15;
+    compressor.connect(this.ctx.destination);
+
     this.master = this.ctx.createGain();
     this.master.gain.value = this.muted ? 0 : 0.9;
-    this.master.connect(this.ctx.destination);
+    this.master.connect(compressor);
+
+    // Auto-suspend audio when browser tab is inactive to save battery and stop unwanted background audio
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.suspend();
+      } else if (!this.muted) {
+        this.resume();
+      }
+    });
 
     this.music = this.ctx.createGain();
     this.music.gain.value = 0.8;
