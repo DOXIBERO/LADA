@@ -59,8 +59,16 @@ class LadaAudio {
     this.music.connect(this.master);
 
     this.sfxBus = this.ctx.createGain();
-    this.sfxBus.gain.value = 1;
-    this.sfxBus.connect(this.master);
+    this.sfxBus.gain.value = 0.95;
+    // Dedicated fast compressor/limiter on the SFX bus to prevent pumping on master
+    const sfxLimiter = this.ctx.createDynamicsCompressor();
+    sfxLimiter.threshold.value = -12;
+    sfxLimiter.knee.value = 6;
+    sfxLimiter.ratio.value = 12;
+    sfxLimiter.attack.value = 0.003;
+    sfxLimiter.release.value = 0.05;
+    this.sfxBus.connect(sfxLimiter);
+    sfxLimiter.connect(this.master);
 
     // space delay for arp / plucks
     const delay = this.ctx.createDelay(1);
@@ -121,10 +129,16 @@ class LadaAudio {
     if (this.timer !== null) { clearInterval(this.timer); this.timer = null; }
   }
 
-  /** seconds since music start (can be negative during count-in) */
+  /** Hardware output + base latency for physical audio sync (Bluetooth / speaker delay) */
+  get hardwareLatency(): number {
+    const ctxAny = this.ctx as (AudioContext & { outputLatency?: number; baseLatency?: number }) | null;
+    return (ctxAny?.outputLatency ?? 0) + (ctxAny?.baseLatency ?? 0);
+  }
+
+  /** seconds since music start (can be negative during count-in), latency-compensated */
   time(): number {
     if (!this.ctx) return 0;
-    return this.ctx.currentTime - this._startAt;
+    return this.ctx.currentTime - this._startAt - this.hardwareLatency;
   }
   beat(): number { return this.time() * (this._bpm / 60); }
   get bpm() { return this._bpm; }

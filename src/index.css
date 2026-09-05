@@ -231,6 +231,18 @@ body {
 }
 .loadbar { animation: kf-loadbar 1.6s cubic-bezier(0.6, 0, 0.2, 1) both; }
 
+/* ---------- Accessibility: Focus outlines ---------- */
+:focus-visible {
+  outline: 2px solid var(--color-cyan) !important;
+  outline-offset: 3px !important;
+}
+
+@keyframes kf-slide-left {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.slide-left { animation: kf-slide-left 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 /* ---------- Accessibility: Prefers-reduced-motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

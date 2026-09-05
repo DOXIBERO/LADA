@@ -156,7 +156,7 @@ export default function App() {
             type="button"
             onClick={() => { setMuted((m) => { const next = !m; audio.setMuted(next); return next; }); audio.uiClick(); }}
             aria-label={muted ? 'Unmute audio' : 'Mute audio'}
-            className="fixed top-2.5 right-2.5 z-50 neon-btn chamfer-sm px-2.5 py-1 text-xs bg-void/85 backdrop-blur-sm border border-line hover:border-cyan"
+            className="fixed top-2.5 left-2.5 z-50 neon-btn chamfer-sm px-2.5 py-1 text-xs bg-void/85 backdrop-blur-sm border border-line hover:border-cyan"
           >
             {muted ? '🔇' : '🔊'}
           </button>

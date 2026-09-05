@@ -34,6 +34,13 @@ export default function Studio({ track, onReady, onExit }: Props) {
 
   useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch { /* noop */ } }, []);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, busy, chatOpen]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && chatOpen) { setChatOpen(false); audio.uiClick(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [chatOpen]);
 
   // build quiz rounds (big options)
   useEffect(() => {
@@ -363,7 +370,7 @@ export default function Studio({ track, onReady, onExit }: Props) {
 
       {/* AI tutor drawer */}
       {chatOpen && (
-        <div className="absolute top-0 right-0 bottom-0 z-40 w-full sm:w-[420px] panel border-l border-cyan/30 flex flex-col rise">
+        <div className="fixed inset-y-0 right-0 z-40 w-full sm:w-[420px] panel border-l border-cyan/30 flex flex-col slide-left shadow-2xl pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <div>
               <div className="panel-tag">AI TUTOR</div>
@@ -371,7 +378,7 @@ export default function Studio({ track, onReady, onExit }: Props) {
                 {hasLiveKey() ? 'Gemini · laif' : 'LADA CORE · offline'}
               </div>
             </div>
-            <button onClick={() => setChatOpen(false)} aria-label="Close tutor chat" className="neon-btn chamfer-sm px-3 py-1.5 text-xs">✕</button>
+            <button onClick={() => { setChatOpen(false); audio.uiClick(); }} aria-label="Close tutor chat" className="neon-btn chamfer-sm w-9 h-9 flex items-center justify-center text-sm">✕</button>
           </div>
 
           {!keySaved && (
