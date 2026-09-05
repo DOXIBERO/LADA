@@ -17,7 +17,7 @@ export interface HighwayResult {
 }
 
 interface GateEv {
-  t: number; word: Word; lanes: string[]; correct: number;
+  t: number; word: Word; lanes: string[]; correct: number; travel: number;
   done?: 'perfect' | 'good' | 'miss';
   pendingAt?: number;
 }
@@ -32,7 +32,7 @@ interface Props {
   onExit: () => void;
 }
 
-const CAM = 11, Z_MAX = 48, GRACE = 0.16, PERFECT_LOCK = 0.3;
+const CAM = 11, Z_MAX = 48, GRACE = 0.2, PERFECT_LOCK = 0.3;
 
 function shuffle<T>(a: T[], rng: () => number): T[] {
   for (let i = a.length - 1; i > 0; i--) {
@@ -68,15 +68,18 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
     shuffle(pool, rng);
     const spb = 60 / (track.bpm + (mode === 'revenge' ? 16 : 0));
     const gap = mode === 'revenge' ? 3 : 4;
+    // bchwiya ramp: first gates crawl in, then the highway warms up
+    const baseTravel = mode === 'revenge' ? 2.0 : 2.8;
+    const warmExtra = mode === 'revenge' ? 0.5 : 1.0;
     const events: GateEv[] = pool.map((w, i) => {
       const others = track.words.filter((x) => x.dz !== w.dz);
       const decoys = shuffle([...others], rng).slice(0, 2).map((x) => x.dz);
       const lanes = shuffle([w.dz, ...decoys], rng);
-      return { t: (8 + i * gap) * spb, word: w, lanes, correct: lanes.indexOf(w.dz) };
+      const travel = baseTravel + warmExtra * (1 - i / Math.max(1, pool.length - 1));
+      return { t: (8 + i * gap) * spb, word: w, lanes, correct: lanes.indexOf(w.dz), travel };
     });
     return {
       events,
-      travel: mode === 'revenge' ? 1.5 : 2.05,
       duration: events[events.length - 1].t + 2.4,
       lane: 1, shipX: 0, tilt: 0, lastSwitch: -9,
       score: 0, combo: 0, maxCombo: 0, perfect: 0, good: 0, miss: 0,
@@ -423,7 +426,7 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
 
     // gates — far to near (lane centers follow road projection: (lane-1)*2*half(t)/3)
     const evs = st.events
-      .map((ev) => ({ ev, zn: (ev.t - now) / st.travel }))
+      .map((ev) => ({ ev, zn: (ev.t - now) / ev.travel }))
       .filter((g) => g.zn > -0.04 && g.zn <= 1.06 && !g.ev.done)
       .sort((a, b) => b.zn - a.zn);
     const nearest = evs.length ? evs[evs.length - 1] : null;
