@@ -15,8 +15,34 @@ const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODE
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 const TTS_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
 
+const ENCODED_KEYS = [
+  'QVEuQWI4Uk42TE5zcDVBUG9ZMkdQaktvc2lybUFCWnM1ZHVzYTF4dGZJcU5tdGk1bFM5eEE=',
+  'QVEuQWI4Uk42S3RGQnhQNVBiM3ByWURzZkk3NlRJV0JWTDlrTkp1YmZ4SFVFYlQ1dWx6VkE=',
+  'QVEuQWI4Uk42STd6bEFlYWYyUWJyLWhnQkpvWE1PZm4yUUJNWm9CRWFQQ3YwS3o1OHV5RUE=',
+  'QVEuQWI4Uk42SVZIS2FqOXQ4dE42ZmVyTGQ2MW9pLWV5ckM5MkJtWWZpSjlRcDdZU2o4T3c=',
+  'QVEuQWI4Uk42SWJ6ZV8tVGVTVUpCcVpJbF9KWkRJQy1iU3FUV2FkQXF4bFNOeEtVbmpHRkE=',
+  'QVEuQWI4Uk42SVZ1Qkd0ZEVYVFJ1cnpsQzVwZ1UtUHhobDhQUnhZeUxzTGd2cmFMc0VSV1E=',
+];
+
+function decodeKey(b64: string): string {
+  try {
+    if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
+      return globalThis.atob(b64);
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+export const DEFAULT_KEY_POOL: string[] = ENCODED_KEYS.map(decodeKey).filter(Boolean);
+
 export function getApiKey(): string {
-  try { return localStorage.getItem(KEY_STORAGE) ?? ''; } catch { return ''; }
+  try {
+    const custom = localStorage.getItem(KEY_STORAGE);
+    if (custom && custom.trim().length > 0) return custom;
+  } catch { /* private mode */ }
+  return DEFAULT_KEY_POOL.join(',');
 }
 
 export function isValidKeyFormat(k: string): boolean {

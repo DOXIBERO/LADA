@@ -274,7 +274,7 @@ export default function RoleplayPartner({ initialScenarioId = 'restaurant', onEx
                 </span>
                 {msg.role === 'model' && (
                   <button
-                    onClick={() => { audio.ensure(); audio.speak(msg.german, 0.88); }}
+                    onClick={() => { audio.ensure(); void audio.speakLive(msg.german); }}
                     title="سمع النطق"
                     className="neon-btn chamfer-sm px-2 py-0.5 text-[11px] font-ar flex items-center gap-1 hover:border-cyan text-dim hover:text-cyan"
                   >

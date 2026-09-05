@@ -7,6 +7,8 @@
 
 type AC = AudioContext;
 
+import { synthesizeGeminiVoice } from './gemini';
+
 const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
 class LadaAudio {
@@ -28,8 +30,6 @@ class LadaAudio {
   private _root = 33;
   private _intensity = 0; // 0..1 extra layers
   muted = false;
-  private deVoice: SpeechSynthesisVoice | null = null;
-  private arVoice: SpeechSynthesisVoice | null = null;
 
   /* ---------- lifecycle ---------- */
   init() {
@@ -93,17 +93,6 @@ class LadaAudio {
     this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-
-    // voice discovery: German and Arabic voices
-    const pick = () => {
-      const vs = window.speechSynthesis?.getVoices() ?? [];
-      this.deVoice = vs.find((v) => v.lang?.toLowerCase().startsWith('de') && /google/i.test(v.name))
-        ?? vs.find((v) => v.lang?.toLowerCase().startsWith('de')) ?? null;
-      this.arVoice = vs.find((v) => (v.lang?.toLowerCase().startsWith('ar-ma') || v.lang?.toLowerCase().startsWith('ar')) && /google/i.test(v.name))
-        ?? vs.find((v) => v.lang?.toLowerCase().startsWith('ar-ma') || v.lang?.toLowerCase().startsWith('ar')) ?? null;
-    };
-    pick();
-    window.speechSynthesis?.addEventListener?.('voiceschanged', pick);
   }
 
   ensure() {
@@ -416,71 +405,29 @@ class LadaAudio {
     });
   }
 
-  /* ---------- Web Speech TTS Fallback ---------- */
-  get ttsReady() { return 'speechSynthesis' in window; }
-
-  speak(text: string, rate = 0.85) {
+  /* ---------- Studio-Quality Live Gemini Voice Playback ---------- */
+  async speakLive(text: string, voiceName = 'Puck'): Promise<void> {
+    const clean = text.trim();
+    if (!clean) return;
+    this.ensure();
     try {
-      if (!this.ttsReady) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'de-DE';
-      if (this.deVoice) u.voice = this.deVoice;
-      u.rate = rate;
-      u.pitch = 1;
-      window.speechSynthesis.speak(u);
-    } catch { /* TTS unavailable — the synth blips carry the show */ }
+      const pcmBase64 = await synthesizeGeminiVoice(clean, voiceName);
+      await this.playPcmBase64(pcmBase64);
+    } catch (e) {
+      console.warn('Live Gemini voice playback warning:', e);
+    }
   }
 
-  speakSequence(words: string[], gapMs = 1000) {
-    words.forEach((w, i) => window.setTimeout(() => this.speak(w), i * gapMs));
+  speak(text: string, _rate?: number) {
+    void this.speakLive(text);
   }
 
-  /** Dual-voice Web Speech fallback: Speaks Darija in Arabic voice and German words with German voice */
-  speakBilingualWebSpeech(darijaText: string, germanWord?: string): Promise<void> {
-    if (!this.ttsReady) return Promise.resolve();
-    this.stopVoice();
-    this.setVoiceActive(true);
-
-    return new Promise<void>((resolve) => {
-      try {
-        const uAr = new SpeechSynthesisUtterance(darijaText);
-        uAr.lang = 'ar-SA';
-        if (this.arVoice) uAr.voice = this.arVoice;
-        uAr.rate = 0.95;
-
-        uAr.onend = () => {
-          if (germanWord) {
-            const uDe = new SpeechSynthesisUtterance(germanWord);
-            uDe.lang = 'de-DE';
-            if (this.deVoice) uDe.voice = this.deVoice;
-            uDe.rate = 0.85;
-            uDe.onend = () => {
-              this.setVoiceActive(false);
-              resolve();
-            };
-            uDe.onerror = () => {
-              this.setVoiceActive(false);
-              resolve();
-            };
-            window.speechSynthesis.speak(uDe);
-          } else {
-            this.setVoiceActive(false);
-            resolve();
-          }
-        };
-
-        uAr.onerror = () => {
-          this.setVoiceActive(false);
-          resolve();
-        };
-
-        window.speechSynthesis.speak(uAr);
-      } catch {
-        this.setVoiceActive(false);
-        resolve();
-      }
-    });
+  async speakSequence(words: string[], gapMs = 600): Promise<void> {
+    for (const w of words) {
+      if (!this.ctx) break;
+      await this.speakLive(w);
+      await new Promise((r) => setTimeout(r, gapMs));
+    }
   }
 }
 

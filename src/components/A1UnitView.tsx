@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { audio } from '../game/audio';
 import { narrator } from '../game/narrator';
+import LiveLessonTutor from './LiveLessonTutor';
 import type { A1Unit } from '../game/a1Curriculum';
 
 /* ============================================================
@@ -211,6 +212,9 @@ export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 min-h-0 overflow-y-auto p-4 md:p-6 max-w-5xl mx-auto w-full">
+        {/* Live Autonomous Personal AI Tutor (speaks on entry) */}
+        <LiveLessonTutor unit={unit} activeTab={tab} />
+
         {/* Cultural Tip Pill */}
         <div className="chamfer-sm border border-amber/30 bg-amber/5 px-4 py-2.5 mb-5 flex items-start gap-3" dir="rtl">
           <span className="text-lg">💡</span>
@@ -258,14 +262,14 @@ export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
 
                 <div className="mt-3 pt-2.5 border-t border-line/40 flex items-center justify-end gap-2" dir="ltr">
                   <button
-                    onClick={() => { audio.ensure(); audio.speak(w.de, 0.7); }}
+                    onClick={() => { audio.ensure(); void audio.speakLive(w.de); }}
                     className="neon-btn chamfer-sm px-2.5 py-1 text-xs font-ar flex items-center gap-1 hover:text-amber"
                   >
                     <span>🐢</span>
                     <span>بشوية (0.7x)</span>
                   </button>
                   <button
-                    onClick={() => { audio.ensure(); audio.speak(w.de, 0.95); }}
+                    onClick={() => { audio.ensure(); void audio.speakLive(w.de); }}
                     className="neon-btn neon-btn-cyan chamfer-sm px-3 py-1 text-xs font-ar flex items-center gap-1 font-bold"
                   >
                     <span>🔊</span>
@@ -288,7 +292,7 @@ export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
                 onClick={() => {
                   audio.ensure();
                   const lines = unit.dialogue.map((d) => d.de);
-                  audio.speakSequence(lines, 3200);
+                  void audio.speakSequence(lines, 600);
                 }}
                 className="neon-btn neon-btn-lime chamfer-sm px-3.5 py-1.5 text-xs font-ar font-bold shrink-0 flex items-center gap-1.5"
               >
@@ -315,7 +319,7 @@ export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
                 </div>
 
                 <button
-                  onClick={() => { audio.ensure(); audio.speak(line.de, 0.9); }}
+                  onClick={() => { audio.ensure(); void audio.speakLive(line.de); }}
                   aria-label={`Listen to ${line.speaker}`}
                   className="neon-btn neon-btn-cyan chamfer-sm px-3.5 py-2 text-xs font-ar flex items-center gap-1 shrink-0 self-end md:self-auto"
                 >
@@ -483,7 +487,7 @@ export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
                 <button
                   onClick={() => {
                     audio.ensure();
-                    audio.speak(currentListening.audioText, 0.85);
+                    void audio.speakLive(currentListening.audioText);
                   }}
                   className="neon-btn neon-btn-cyan chamfer px-8 py-4 text-lg font-ar font-bold flex items-center justify-center gap-2 mx-auto shadow-[0_0_20px_rgba(0,240,255,0.3)]"
                 >

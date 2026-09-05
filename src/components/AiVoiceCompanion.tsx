@@ -63,17 +63,13 @@ export default function AiVoiceCompanion() {
               className={`text-[10px] font-mono px-2 py-0.5 chamfer-sm border ${
                 state.source === 'gemini'
                   ? 'text-cyan border-cyan/50 bg-cyan/10'
-                  : state.source === 'webspeech'
-                  ? 'text-amber border-amber/50 bg-amber/10'
                   : 'text-dim border-line/40 bg-panel2/40'
               }`}
             >
               {state.loading
-                ? '✦ LOADING VOICE...'
+                ? '✦ LOADING GEMINI VOICE...'
                 : state.source === 'gemini'
-                ? '✦ GEMINI LIVE VOICE'
-                : state.source === 'webspeech'
-                ? '✦ LOCAL VOICE'
+                ? '✦ GEMINI LIVE 24k'
                 : '✦ AI COMPANION'}
             </span>
           </div>

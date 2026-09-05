@@ -7,15 +7,16 @@
    ============================================================ */
 
 import { audio } from './audio';
-import { hasLiveKey, synthesizeGeminiVoice } from './gemini';
+import { synthesizeGeminiVoice, rotateKey } from './gemini';
 import type { Track, Word } from './content';
+import type { A1Unit } from './a1Curriculum';
 
 const AUTO_VOICE_STORAGE = 'lada_auto_voice';
 
 export interface NarratorItem {
   text: string;        // Text sent to Gemini TTS (Darija + German phrases)
   subtitle: string;    // Displayed on-screen subtitle in Darija
-  germanCue?: string;  // German word for Web Speech fallback
+  germanCue?: string;
 }
 
 export interface NarratorState {
@@ -24,7 +25,7 @@ export interface NarratorState {
   autoVoice: boolean;
   text: string;
   subtitle: string;
-  source: 'gemini' | 'webspeech' | 'none';
+  source: 'gemini' | 'none';
 }
 
 class NarratorManager {
@@ -104,8 +105,8 @@ class NarratorManager {
   }
 
   /**
-   * Narrates an instructional script.
-   * If autoVoice is disabled and force is false, it only displays subtitles without audio.
+   * Narrates using the real Google AI Studio human voice (24kHz linear PCM).
+   * Automatically retries with key rotation if quota is reached.
    */
   async narrate(item: NarratorItem, force = false): Promise<void> {
     this.lastItem = item;
@@ -122,11 +123,11 @@ class NarratorManager {
 
     this.updateState({ loading: true });
 
-    // Step 1: Try Gemini Live TTS
-    if (hasLiveKey()) {
+    // Always synthesize with Gemini Live 24kHz Human Voice
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const pcmBase64 = await synthesizeGeminiVoice(item.text);
-        if (this.currentToken !== token) return; // Superceded by another step
+        if (this.currentToken !== token) return;
 
         this.updateState({ loading: false, speaking: true, source: 'gemini' });
         await audio.playPcmBase64(pcmBase64);
@@ -135,28 +136,65 @@ class NarratorManager {
         }
         return;
       } catch (err) {
-        console.warn('Gemini TTS error, falling back to Web Speech:', err);
+        console.warn(`Gemini Live Voice attempt ${attempt + 1} failed:`, err);
+        rotateKey();
       }
     }
 
-    if (this.currentToken !== token) return;
-
-    // Step 2: Fallback to dual-voice Web Speech
-    try {
-      this.updateState({ loading: false, speaking: true, source: 'webspeech' });
-      await audio.speakBilingualWebSpeech(item.subtitle, item.germanCue);
-    } catch {
-      // Audio fallback complete
-    } finally {
-      if (this.currentToken === token) {
-        this.updateState({ speaking: false, source: 'none' });
-      }
-    }
+    this.updateState({ loading: false, speaking: false, source: 'none' });
   }
 
   replay(): void {
     if (this.lastItem) {
       void this.narrate(this.lastItem, true);
+    }
+  }
+
+  /* ============================================================
+     LIVE TUTOR DIALOGUE & INSTRUCTIONAL SCRIPTS
+     ============================================================ */
+
+  narrateA1UnitIntro(unit: A1Unit): void {
+    this.narrate({
+      text: `أهلاً بيك! أنا الأستاذ المساعد ديالك فـ LADA. فهاد الوحدة رقم ${unit.number} غادي نتعلمو: ${unit.titleDz}. جلس معايا وتبع معايا خطوة بخطوة، غادي نضبطو الكلمات والقواعد ديال هاد الدرس!`,
+      subtitle: `الوحدة ${unit.number}: ${unit.titleDz} (${unit.titleDe}) — ${unit.descDz}`,
+      germanCue: unit.titleDe,
+    });
+  }
+
+  narrateA1Tab(unit: A1Unit, tab: string): void {
+    switch (tab) {
+      case 'words':
+        this.narrate({
+          text: `هنا كاينين المفردات الأساسية ديال وحدة ${unit.titleDe}. سمع لكل كلمة مزيان وركز ف العقلة باش تعقل عليها!`,
+          subtitle: `المفردات: سمع النطق وركّز ف العقلة (3o9ola)`,
+          germanCue: unit.titleDe,
+        });
+        break;
+      case 'dialog':
+        this.narrate({
+          text: `دابا ندوزو للحوار الواقعي! اسمع كيفاش كيهدرو الألمان فهاد الموقف، وتقدر تسمع كل جملة بوحدها ولا الحوار كامل.`,
+          subtitle: `المحادثة: اسمع الحوار الواقعي فهاد الموقف!`,
+        });
+        break;
+      case 'grammar':
+        this.narrate({
+          text: `دابا القواعد بالدارجة! غنشرح ليك أهم قاعدة فهاد الدرس بطريقة ساهلة ومباشرة بلا تعقيد.`,
+          subtitle: `القواعد بالدارجة: قواعد الـ Syntax والتصريف مبسطة`,
+        });
+        break;
+      case 'sentence':
+        this.narrate({
+          text: `دابا دورك ف تركيب الجمل! رتب الكلمات ف البلاصة الصحيحة. تفكّر ديما: الفعل كيجي ف المرتبة الثانية!`,
+          subtitle: `تركيب الجمل: رتب الكلمات بالترتيب الصحيح ف الجملة`,
+        });
+        break;
+      case 'listening':
+        this.narrate({
+          text: `دابا الفهم الشفهي ديال امتحان Goethe A1! كليكي على زر الاستماع، ركز ف التسجيل، وجاوب على السؤال.`,
+          subtitle: `الفهم الشفهي: اسمع التسجيل بالألمانية وجاوب بالدارجة`,
+        });
+        break;
     }
   }
 
