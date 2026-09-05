@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../game/audio';
-import { DZ_TO_WORD, mulberry32, hashStr, type Track, type Word } from '../game/content';
+import { mulberry32, hashStr, type Track, type Word } from '../game/content';
 import { pairHint } from '../game/ladaCore';
 
 /* ============================================================
@@ -435,7 +435,7 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
       const z = Math.max(0.01, g.zn * Z_MAX);
       const t = T(z);
       const y = Y(t);
-      const gateH = H * 0.2 * t + 10;
+      const gateH = H * 0.27 * t + 14;
       const isNearest = g === nearest;
       for (let lane = 0; lane < 3; lane++) {
         const cx = W / 2 + (lane - 1) * (half(t) * 2 / 3);
@@ -451,20 +451,14 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
         ctx.lineTo(cx + gw / 2, y - gateH);
         ctx.lineTo(cx + gw / 2, y);
         ctx.stroke();
-        ctx.fillRect(cx - gw / 2, y - gateH, gw, gateH * 0.32);
-        ctx.strokeRect(cx - gw / 2, y - gateH, gw, gateH * 0.32);
-        // labels — Darija in Arabic script (main), its German below (dim)
-        const fs = Math.max(10, 22 * t);
-        ctx.fillStyle = near ? '#ffffff' : `rgba(0,240,255,${0.45 + t * 0.55})`;
+        ctx.fillRect(cx - gw / 2, y - gateH, gw, gateH * 0.42);
+        ctx.strokeRect(cx - gw / 2, y - gateH, gw, gateH * 0.42);
+        // label — Darija in Arabic script, big & obvious (this is the answer)
+        const fs = Math.max(15, 33 * t);
+        ctx.fillStyle = near ? '#ffffff' : `rgba(0,240,255,${0.55 + t * 0.45})`;
         ctx.font = `700 ${fs}px "Noto Kufi Arabic", sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(g.ev.lanes[lane], cx, y - gateH + gateH * 0.21);
-        const de = DZ_TO_WORD[g.ev.lanes[lane]]?.de ?? '';
-        if (de) {
-          ctx.font = `600 ${Math.max(7, 11 * t)}px Rajdhani, sans-serif`;
-          ctx.fillStyle = `rgba(217,236,255,${0.25 + t * 0.45})`;
-          ctx.fillText(de, cx, y - gateH + gateH * 0.30);
-        }
+        ctx.fillText(g.ev.lanes[lane], cx, y - gateH + gateH * 0.28);
       }
       // approach chevron under the live gate row
       if (isNearest) {
@@ -625,10 +619,10 @@ export default function Highway({ track, mode, weakWords, onFinish, onExit }: Pr
         </div>
 
         {target && (
-          <div key={target.idx} className="panel chamfer px-6 py-2 text-center rise">
-            <div className="panel-tag">TARGET — HIT THE GATE</div>
-            <div className="font-display text-2xl md:text-4xl text-ink leading-tight text-glow-cyan">{target.de}</div>
-            <div className="text-dim text-sm tracking-wider">{target.ipa}</div>
+          <div key={target.idx} className="panel chamfer px-8 py-3 text-center rise">
+            <div className="panel-tag">TARGET · دوز اللين الصحيحة</div>
+            <div className="font-display text-3xl md:text-5xl text-ink leading-tight text-glow-cyan">{target.de}</div>
+            <div className="text-dim text-base tracking-wider">{target.ipa}</div>
           </div>
         )}
 

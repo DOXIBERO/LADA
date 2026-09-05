@@ -1,39 +1,46 @@
 import { useEffect, useRef, useState } from 'react';
 import { audio } from '../game/audio';
+import { askTutor, getApiKey, hasLiveKey, setApiKey } from '../game/gemini';
 import { TRAPS, hashStr, mulberry32, type Track } from '../game/content';
 
 /* ============================================================
-   LEVEL 1 — STUDIO SESSION
-   Futuristic mixer console: the AI professor breaks the track
-   into L-Ma3na (Darija punchline), L-Fakh (phonetic trap) and
-   Qawa3id (one-line grammar hack). Ends with a checkpoint quiz.
+   LEVEL 1 — THE A0 LESSON (dars b dars)
+   Step-by-step teaching with a memorable 3o9ola per word, then
+   a big-option checkpoint quiz, plus a LIVE Gemini AI tutor
+   (paste your own AIza key). Falls back to on-device LADA CORE.
    ============================================================ */
 
 interface Props { track: Track; onReady: () => void; onExit: () => void }
-
-interface Round { de: string; options: string[]; correct: string }
+interface Round { de: string; options: string[]; correct: string; mnemonic: string }
+interface Msg { role: 'user' | 'ai'; text: string }
 
 export default function Studio({ track, onReady, onExit }: Props) {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [phase, setPhase] = useState<'learn' | 'quiz'>('learn');
+  const [stepIdx, setStepIdx] = useState(0);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [ri, setRi] = useState(0);
-  const [wrongPick, setWrongPick] = useState<string | null>(null);
-  const [rightPick, setRightPick] = useState<string | null>(null);
+  const [wrong, setWrong] = useState<string | null>(null);
+  const [right, setRight] = useState<string | null>(null);
   const [quizDone, setQuizDone] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const playingRef = useRef(false);
-  const playStart = useRef(0);
 
-  // cancel any queued speech when leaving the studio
+  // AI tutor chat
+  const [chatOpen, setChatOpen] = useState(false);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [keyDraft, setKeyDraft] = useState(getApiKey());
+  const [keySaved, setKeySaved] = useState(hasLiveKey());
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch { /* noop */ } }, []);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, busy, chatOpen]);
 
-  // build quiz rounds
+  // build quiz rounds (big options)
   useEffect(() => {
     const r = mulberry32(hashStr(track.id) + 99);
     const ws = [...track.words];
     for (let i = ws.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [ws[i], ws[j]] = [ws[j], ws[i]]; }
-    const rs: Round[] = ws.slice(0, 3).map((w) => {
+    const rs: Round[] = ws.slice(0, 4).map((w) => {
       const others = track.words.filter((x) => x.dz !== w.dz);
       const opts = [w.dz];
       while (opts.length < 3) {
@@ -41,228 +48,288 @@ export default function Studio({ track, onReady, onExit }: Props) {
         if (!opts.includes(c)) opts.push(c);
       }
       for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
-      return { de: w.de, options: opts, correct: w.dz };
+      return { de: w.de, options: opts, correct: w.dz, mnemonic: w.mnemonic };
     });
     setRounds(rs);
   }, [track]);
 
-  // waveform animation
-  useEffect(() => {
-    let raf = 0;
-    const onResize = () => {
-      const c = canvasRef.current;
-      if (!c) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      c.width = Math.floor(c.clientWidth * dpr);
-      c.height = Math.floor(c.clientHeight * dpr);
-    };
-    onResize();
-    window.addEventListener('resize', onResize);
-    const wr = mulberry32(hashStr(track.id) + 5);
-    const bars = Array.from({ length: 72 }, () => 0.25 + wr() * 0.75);
-    const loop = () => {
-      raf = requestAnimationFrame(loop);
-      const c = canvasRef.current;
-      const ctx = c?.getContext('2d');
-      if (!c || !ctx) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const W = c.clientWidth, H = c.clientHeight;
-      ctx.clearRect(0, 0, W, H);
-      const t = performance.now() / 1000;
-      const bw = W / bars.length;
-      const elapsed = playingRef.current ? (performance.now() - playStart.current) / 1000 : 0;
-      const dur = track.words.length * 1.05;
-      const ph = playingRef.current ? Math.min(1, elapsed / dur) : 0;
-      bars.forEach((b, i) => {
-        const live = playingRef.current && i / bars.length <= ph;
-        const amp = b * (live ? (0.5 + 0.5 * Math.abs(Math.sin(t * 7 + i * 0.7))) : 0.22);
-        const h = amp * H * 0.8;
-        ctx.fillStyle = live ? (i % 5 === 0 ? '#ff2d78' : '#00f0ff') : 'rgba(0,240,255,0.25)';
-        ctx.fillRect(i * bw + 1, (H - h) / 2, bw - 2, h);
-      });
-      if (playingRef.current) {
-        ctx.fillStyle = '#b6ff2e';
-        ctx.fillRect(ph * W - 1, 0, 2, H);
-        if (ph >= 1) { playingRef.current = false; setPlaying(false); }
-      }
-    };
-    raf = requestAnimationFrame(loop);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
-  }, [track]);
-
-  const playAll = () => {
-    if (playing) return;
-    audio.ensure();
-    playingRef.current = true;
-    playStart.current = performance.now();
-    setPlaying(true);
-    audio.speakSequence(track.words.map((w) => w.de), 1050);
-    audio.uiOpen();
-  };
-
   const pick = (opt: string) => {
-    if (rightPick) return;
+    if (right) return;
     const round = rounds[ri];
     if (!round) return;
     if (opt === round.correct) {
-      setRightPick(opt);
-      audio.grade(90);
+      setRight(opt); audio.grade(90);
       window.setTimeout(() => {
-        setRightPick(null);
-        setWrongPick(null);
+        setRight(null); setWrong(null);
         if (ri + 1 >= rounds.length) { setQuizDone(true); audio.win(); }
         else { setRi(ri + 1); audio.uiOpen(); }
-      }, 650);
+      }, 700);
     } else {
-      setWrongPick(opt);
-      audio.miss();
-      window.setTimeout(() => setWrongPick(null), 500);
+      setWrong(opt); audio.miss();
+      window.setTimeout(() => setWrong(null), 550);
     }
   };
 
-  const round = rounds[ri];
+  const onDeviceAnswer = (q: string): string => {
+    const low = q.toLowerCase();
+    const hit = track.words.find((w) => low.includes(w.de.toLowerCase()) || low.includes(w.dz));
+    if (hit) {
+      const t = TRAPS[hit.trap];
+      return `${hit.de} = ${hit.dz}  ·  ${hit.mnemonic}\nالفخ: ${t.label} — ${t.tip}`;
+    }
+    return `سولني على شي كلمة من هاد الدرس: ${track.words.map((w) => w.de).join('، ')}.\nولا لصق API key باش يهدر معاك Gemini laif.`;
+  };
+
+  const send = async () => {
+    const q = input.trim();
+    if (!q || busy) return;
+    setInput('');
+    setMsgs((m) => [...m, { role: 'user', text: q }]);
+    setBusy(true);
+    try {
+      if (hasLiveKey()) {
+        const ctx = `الدرس: ${track.title} (${track.titleDe}). الكلمات: ${track.words.map((w) => `${w.de} = ${w.dz}`).join('، ')}`;
+        const ans = await askTutor(q, ctx);
+        setMsgs((m) => [...m, { role: 'ai', text: ans }]);
+      } else {
+        await new Promise((r) => window.setTimeout(r, 300));
+        setMsgs((m) => [...m, { role: 'ai', text: onDeviceAnswer(q) }]);
+      }
+    } catch (e) {
+      setMsgs((m) => [...m, { role: 'ai', text: `LADA CORE: ما قدرتش نوصل ل Gemini (${(e as Error).message}). ها الجواب من الذاكرة:\n${onDeviceAnswer(q)}` }]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveKey = () => {
+    setApiKey(keyDraft);
+    setKeySaved(hasLiveKey());
+    audio.uiClick();
+    setMsgs((m) => [...m, { role: 'ai', text: hasLiveKey() ? 'المفتاح تسجّل. دابا التuteur غادي يهدر معاك ب Gemini laif — سولو أي حاجة!' : 'المفتاح خاصو يبدا ب AIza… — جيبو من aistudio.google.com/apikey' }]);
+  };
+
+  const step = track.steps[stepIdx];
+  const isLastStep = stepIdx === track.steps.length - 1;
 
   return (
     <div className="relative h-full w-full bg-void overflow-hidden">
-      <div className="absolute inset-0 grid-bg opacity-30" />
+      <div className="absolute inset-0 grid-bg opacity-20" />
       <div className="scanlines vignette pointer-events-none absolute inset-0" />
 
-      <div className="relative z-10 h-full flex flex-col max-w-7xl mx-auto p-3 md:p-6">
+      <div className="relative z-10 h-full flex flex-col max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-5">
         {/* header */}
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <button onClick={onExit} className="neon-btn chamfer-sm px-3 py-2 text-xs">◀ DECK</button>
-            <div>
-              <div className="panel-tag">LEVEL 1 — STUDIO SESSION</div>
-              <div className="font-display text-2xl text-ink">{track.tier} <span className="text-cyan text-glow-cyan">{track.title}</span>
-                <span className="ml-3 text-dim text-sm font-ar">{track.tagline}</span>
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={onExit} className="neon-btn chamfer-sm px-3 py-2 text-xs shrink-0">◀</button>
+            <div className="min-w-0">
+              <div className="panel-tag">{track.tier} · LEVEL 1</div>
+              <div className="font-ar text-2xl md:text-3xl text-ink leading-tight truncate">
+                {track.title} <span className="text-cyan text-glow-cyan font-display text-xl md:text-2xl align-middle">{track.titleDe}</span>
               </div>
             </div>
           </div>
-          <button
-            onClick={onReady}
-            disabled={!quizDone}
-            className="neon-btn neon-btn-lime chamfer px-6 py-3 text-sm pulse-glow"
-          >
-            {quizDone ? 'DEPLOY TO HIGHWAY ▶' : 'CLEAR THE CHECKPOINT'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setChatOpen((o) => !o); audio.uiClick(); }}
+              className={`neon-btn ${hasLiveKey() ? 'neon-btn-lime' : ''} chamfer-sm px-4 py-2 text-xs`}
+            >
+              ✦ AI TUTOR {hasLiveKey() ? '· LIVE' : '· CORE'}
+            </button>
+            <button
+              onClick={onReady}
+              disabled={!quizDone}
+              className="neon-btn neon-btn-mag chamfer px-5 py-2.5 text-sm pulse-mag"
+            >
+              {quizDone ? '▶ HIGHWAY' : 'دوز التشيكپوان'}
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* left: deck + checkpoint */}
-          <div className="lg:col-span-5 flex flex-col gap-4 min-h-0">
-            <div className="panel chamfer p-4">
+        {/* goal line */}
+        <div className="chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2 mb-4 font-ar text-[15px] text-ink">
+          <span className="panel-tag ml-2">الهدف</span> {track.goal}
+        </div>
+
+        {/* body: learn or quiz */}
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          {phase === 'learn' && step && (
+            <div key={stepIdx} className="rise">
+              {/* step header + progress */}
               <div className="flex items-center justify-between mb-2">
-                <div className="panel-tag">MASTER DECK — {track.bpm} BPM</div>
-                <button onClick={playAll} className="neon-btn chamfer-sm px-4 py-1.5 text-xs" disabled={playing}>
-                  {playing ? '◉ PLAYING…' : '▶ AUDITION TRACK'}
+                <div className="font-display text-cyan text-sm tracking-widest">
+                  STEP {stepIdx + 1}/{track.steps.length}
+                </div>
+                <div className="flex gap-1.5">
+                  {track.steps.map((_, i) => (
+                    <span key={i} className={`h-1.5 w-8 ${i < stepIdx ? 'bg-lime' : i === stepIdx ? 'bg-cyan' : 'bg-line'}`} />
+                  ))}
+                </div>
+              </div>
+
+              <h2 className="font-ar text-3xl md:text-4xl text-ink mb-1">{step.title}</h2>
+              <p className="font-ar text-lg text-dim mb-5 leading-relaxed max-w-3xl">{step.explain}</p>
+
+              {/* word cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {step.items.map((w, i) => (
+                  <div key={w.de} className="panel chamfer p-5 rise" style={{ animationDelay: `${i * 80}ms` }}>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-display text-3xl text-ink text-glow-cyan">{w.de}</span>
+                      <span className="text-dim text-sm">{w.ipa}</span>
+                    </div>
+                    <div className="font-ar text-2xl text-cyan mt-1" dir="rtl">{w.dz}</div>
+                    <div className="mt-3 chamfer-sm bg-mag/8 border border-mag/30 px-3 py-2 font-ar text-[15px] text-ink leading-relaxed">
+                      <span className="text-mag font-semibold">العقلة:</span> {w.mnemonic}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="chamfer-sm bg-cyan/8 border border-cyan/30 text-cyan px-2 py-0.5 text-[11px] font-ar">
+                        {TRAPS[w.trap].label}
+                      </span>
+                      <button onClick={() => { audio.ensure(); audio.speak(w.de); }} className="neon-btn chamfer-sm px-4 py-1.5 text-xs font-ar">
+                        ◉ سمع
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {step.grammar && (
+                <div className="mt-4 chamfer-sm border border-amber/30 bg-amber/5 px-4 py-3 font-ar text-[15px] text-ink leading-relaxed">
+                  <span className="text-amber font-semibold">قاعدة:</span> {step.grammar}
+                </div>
+              )}
+
+              {/* nav */}
+              <div className="flex items-center justify-between mt-6 pb-2">
+                <button
+                  onClick={() => { if (stepIdx > 0) { setStepIdx(stepIdx - 1); audio.uiClick(); } }}
+                  disabled={stepIdx === 0}
+                  className="neon-btn chamfer-sm px-6 py-3 text-sm"
+                >
+                  ◀ اللي قبل
+                </button>
+                <button
+                  onClick={() => { audio.uiOpen(); if (isLastStep) setPhase('quiz'); else setStepIdx(stepIdx + 1); }}
+                  className="neon-btn neon-btn-lime chamfer px-10 py-3.5 text-lg pulse-glow font-ar"
+                >
+                  {isLastStep ? 'التشيكپوان ▶' : 'التالي ▶'}
                 </button>
               </div>
-              <canvas ref={canvasRef} className="w-full h-24 block" />
-              <div className="mt-3 grid gap-2">
-                <div className="chamfer-sm border border-cyan/25 bg-cyan/5 p-3">
-                  <div className="panel-tag mb-1">L-MA3NA · المعنى</div>
-                  <p className="text-ink leading-relaxed font-ar text-[15px]">{track.ma3na}</p>
-                </div>
-                <div className="chamfer-sm border border-amber/30 bg-amber/5 p-3">
-                  <div className="panel-tag !text-amber mb-1" style={{ color: '#ffb300', textShadow: '0 0 12px rgba(255,179,0,0.7)' }}>QAWA3ID · القواعد</div>
-                  <p className="text-ink leading-relaxed font-ar text-[15px]">{track.qawa3id}</p>
-                </div>
-              </div>
             </div>
+          )}
 
-            {/* checkpoint quiz */}
-            <div className={`panel chamfer p-4 flex-1 ${quizDone ? 'panel-lime' : ''}`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="panel-tag">CHECKPOINT — MATCH THE MEANING</div>
-                <div className="font-display text-xs text-dim">{Math.min(ri + 1, rounds.length)}/{rounds.length || 3}</div>
-              </div>
-              {!quizDone && round ? (
-                <div key={ri} className={wrongPick ? 'shake' : 'rise'}>
-                  <div className="font-display text-3xl text-ink text-glow-cyan mb-3">{round.de}</div>
-                  <div className="grid gap-2">
-                    {round.options.map((opt) => {
-                      const isRight = rightPick === opt;
-                      const isWrong = wrongPick === opt;
+          {phase === 'quiz' && (
+            <div className="rise max-w-2xl">
+              <div className="panel-tag mb-2">LEVEL 1 · CHECKPOINT</div>
+              {!quizDone && rounds[ri] ? (
+                <div key={ri} className={wrong ? 'shake' : ''}>
+                  <h2 className="font-ar text-2xl text-dim mb-1">شنو كتعني هاد الكلمة؟</h2>
+                  <div className="font-display text-5xl md:text-6xl text-ink text-glow-cyan my-4">{rounds[ri].de}</div>
+                  <div className="grid gap-3">
+                    {rounds[ri].options.map((opt) => {
+                      const isR = right === opt, isW = wrong === opt;
                       return (
                         <button
                           key={opt}
                           onClick={() => pick(opt)}
                           dir="rtl"
-                          className={`chamfer-sm border px-4 py-2.5 text-right font-ar text-xl leading-none transition-all duration-100
-                            ${isRight ? 'border-lime bg-lime/20 text-lime' : isWrong ? 'border-mag bg-mag/20 text-mag' : 'border-line bg-panel2/60 text-ink hover:border-cyan/60 hover:bg-cyan/10'}`}
+                          className={`chamfer border-2 px-6 py-5 text-right font-ar text-3xl leading-none transition-all duration-100 cursor-pointer
+                            ${isR ? 'border-lime bg-lime/20 text-lime' : isW ? 'border-mag bg-mag/20 text-mag' : 'border-line bg-panel2/70 text-ink hover:border-cyan hover:bg-cyan/10'}`}
                         >
                           {opt}
                         </button>
                       );
                     })}
                   </div>
-                  {wrongPick && (
-                    <p className="mt-2 text-base text-mag font-ar">
-                      لا! {TRAPS[track.words.find((w) => w.dz === round.correct)?.trap ?? 'ich'].label} — جرّب مرّة خرى.
-                    </p>
+                  {wrong && (
+                    <p className="mt-3 font-ar text-lg text-mag">لا! العقلة: {rounds[ri].mnemonic}</p>
                   )}
+                  <div className="mt-4 text-dim font-display text-sm">{ri + 1} / {rounds.length}</div>
                 </div>
               ) : (
-                <div className="rise text-center py-6">
-                  <div className="font-display text-3xl text-lime text-glow-lime mb-2">CHECKPOINT CLEAR</div>
-                  <p className="text-dim font-ar">المخّ صافي. دابا الأوتوبان — {track.words.length * 2} غيت، {track.bpm} BPM.</p>
+                <div className="text-center py-10">
+                  <div className="font-ar text-4xl text-lime text-glow-lime mb-3">التشيكپوان صافي!</div>
+                  <p className="font-ar text-lg text-dim mb-8">دابا غادي تدخل لـ Highway — {track.words.length} كلمات، {track.bpm} BPM.</p>
+                  <button onClick={onReady} className="neon-btn neon-btn-mag chamfer px-12 py-4 text-xl pulse-mag font-ar">
+                    ▶ دخل ل Highway
+                  </button>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* right: word cards */}
-          <div className="lg:col-span-7 min-h-0 overflow-y-auto pr-1 grid content-start gap-2 grid-cols-1 md:grid-cols-2">
-            {track.words.map((w, i) => {
-              const open = expanded === w.de;
-              const trap = TRAPS[w.trap];
-              return (
-                <button
-                  key={w.de}
-                  onClick={() => { setExpanded(open ? null : w.de); audio.uiClick(); }}
-                  className={`text-left panel chamfer-sm p-3 transition-all duration-150 rise ${open ? '!border-cyan/70 md:col-span-2' : 'hover:!border-cyan/40'}`}
-                  style={{ animationDelay: `${i * 60}ms` }}
-                >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-display text-xl text-ink">{w.de}</span>
-                    <span className="text-dim text-sm">{w.ipa}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 mt-1">
-                    <span className="font-ar text-cyan text-xl leading-none">{w.dz}</span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="chamfer-sm bg-mag/10 border border-mag/40 text-mag px-2 py-0.5 text-[10px] font-display tracking-widest">
-                      L-FAKH · {trap.label}
-                    </span>
-                    <span className="text-dim text-xs">{open ? '▲' : '▼'}</span>
-                  </div>
-                  {open && (
-                    <div className="mt-3 grid gap-2 rise">
-                      <p className="text-ink text-[15px] leading-relaxed font-ar">{trap.tip}</p>
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => { e.stopPropagation(); audio.speak(w.de); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); audio.speak(w.de); } }}
-                        className="neon-btn chamfer-sm px-3 py-1.5 text-xs w-fit font-ar"
-                      >
-                        ◉ سمع — {w.de}
-                      </span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-3 text-dim text-sm flex justify-between items-center">
-          <span className="font-ar">دوز على الكارط → تحليل الفخّ الصوتي</span>
-          <span className="hidden md:inline text-xs tracking-widest font-body">TTS: {audio.ttsReady ? 'DE-DE VOICE READY' : 'SYNTH FALLBACK'}</span>
+          )}
         </div>
       </div>
+
+      {/* floating tutor toggle (when closed) */}
+      {!chatOpen && (
+        <button
+          onClick={() => { setChatOpen(true); audio.uiClick(); }}
+          className="absolute bottom-5 right-5 z-30 neon-btn neon-btn-lime chamfer px-5 py-3 text-sm pulse-glow font-ar"
+        >
+          ✦ سول التuteur
+        </button>
+      )}
+
+      {/* AI tutor drawer */}
+      {chatOpen && (
+        <div className="absolute top-0 right-0 bottom-0 z-40 w-full sm:w-[420px] panel border-l border-cyan/30 flex flex-col rise">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line">
+            <div>
+              <div className="panel-tag">AI TUTOR</div>
+              <div className={`font-ar text-lg ${hasLiveKey() ? 'text-lime' : 'text-amber'}`}>
+                {hasLiveKey() ? 'Gemini · laif' : 'LADA CORE · offline'}
+              </div>
+            </div>
+            <button onClick={() => setChatOpen(false)} className="neon-btn chamfer-sm px-3 py-1.5 text-xs">✕</button>
+          </div>
+
+          {!keySaved && (
+            <div className="px-4 py-3 border-b border-line bg-amber/5">
+              <p className="font-ar text-[13px] text-dim leading-relaxed mb-2">
+                باش التuteur يهدر معاك ب <span className="text-lime">Gemini laif</span>، لصق الـ API key ديالك (كاتبدا ب AIza) من
+                <span className="text-cyan"> aistudio.google.com/apikey</span>:
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={keyDraft}
+                  onChange={(e) => setKeyDraft(e.target.value)}
+                  placeholder="AIza…"
+                  className="flex-1 chamfer-sm bg-panel2 border border-line px-3 py-2 text-sm text-ink outline-none focus:border-cyan"
+                />
+                <button onClick={saveKey} className="neon-btn neon-btn-lime chamfer-sm px-4 py-2 text-xs">حفظ</button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto px-4 py-3 grid content-start gap-2">
+            {msgs.length === 0 && (
+              <p className="font-ar text-dim text-[15px] leading-relaxed">
+                السلام! سولني على أي كلمة ولا قاعدة فهاد الدرس — <span className="text-ink">{track.title}</span>.
+                <br />مثلا: «كيفاش ننطق schön؟»
+              </p>
+            )}
+            {msgs.map((m, i) => (
+              <div key={i} className={`chamfer-sm px-3 py-2 font-ar text-[15px] leading-relaxed whitespace-pre-line ${m.role === 'user' ? 'bg-cyan/10 border border-cyan/30 text-ink self-end' : 'bg-panel2 border border-line text-ink'}`}>
+                {m.text}
+              </div>
+            ))}
+            {busy && <div className="text-cyan blink font-ar text-sm">كايكتب…</div>}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="p-3 border-t border-line flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+              placeholder="سول هنا بالدارجة…"
+              className="flex-1 chamfer-sm bg-panel2 border border-line px-3 py-2.5 font-ar text-[15px] text-ink outline-none focus:border-cyan"
+            />
+            <button onClick={send} disabled={busy} className="neon-btn chamfer-sm px-5 py-2 text-sm">▶</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
