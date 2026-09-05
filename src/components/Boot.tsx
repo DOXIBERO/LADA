@@ -35,7 +35,14 @@ export default function Boot({ onStart }: { onStart: () => void }) {
     return () => { window.clearInterval(id); window.removeEventListener('keydown', onKey); };
   }, [onStart]);
 
-  const ticker = ALL_WORDS.map((w) => `${w.de.toUpperCase()} = ${w.dz.toUpperCase()}`).join('   ▪   ');
+  const tickerItems = ALL_WORDS.map((w, idx) => (
+    <span key={idx} className="inline-flex items-center gap-2 mx-3 text-dim">
+      <span className="font-display text-cyan text-xs tracking-wider" dir="ltr">{w.de.toUpperCase()}</span>
+      <span className="text-mag font-mono text-xs">=</span>
+      <span className="font-ar text-ink text-sm" dir="rtl">{w.dz}</span>
+      <span className="text-line text-xs mx-1">▪</span>
+    </span>
+  ));
 
   return (
     <div className="relative h-full w-full bg-void overflow-hidden select-none">
@@ -60,8 +67,8 @@ export default function Boot({ onStart }: { onStart: () => void }) {
             <p className="font-display text-lg md:text-2xl text-cyan tracking-[0.2em] mt-4">
               DARIJA <span className="text-mag">⟶</span> DEUTSCH
             </p>
-            <p className="text-dim text-lg md:text-xl mt-2 max-w-xl leading-relaxed font-ar">
-              تعلّم الألمانية بالدارجة — <span className="text-ink">ريتم، فونيتيك، و ريفليكس</span>.
+            <p className="text-dim text-lg md:text-xl mt-2 max-w-xl leading-relaxed font-ar text-right" dir="rtl">
+              تعلّم الألمانية بالدارجة — <span className="text-ink font-semibold">ريتم، فونيتيك، و ريفليكس</span>.
               ستوديو ← الأوتوبان ← حلبة الصوت. الغلطة ديالك اليوم هي البوس ليفل ديال غدّا.
             </p>
             <button
@@ -104,9 +111,9 @@ export default function Boot({ onStart }: { onStart: () => void }) {
 
         {/* vocab ticker */}
         <div className="relative border-t border-line py-2 overflow-hidden mb-2">
-          <div className="ticker-track whitespace-nowrap font-ar text-base text-dim w-max">
-            <span className="px-6">{ticker}</span>
-            <span className="px-6">{ticker}</span>
+          <div className="ticker-track whitespace-nowrap text-sm text-dim w-max flex items-center">
+            <div className="flex items-center">{tickerItems}</div>
+            <div className="flex items-center">{tickerItems}</div>
           </div>
         </div>
       </div>

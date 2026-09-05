@@ -37,11 +37,12 @@ export const TRAPS: Record<TrapKey, Trap> = {
 };
 
 export interface Word {
-  de: string;       // German
-  ipa: string;      // phonetic
-  dz: string;       // Darija — Arabic script (shown everywhere)
-  ar: string;       // Arabic script (kept in sync with dz)
-  mnemonic: string; // 3o9ola — Darija memory hook
+  de: string;          // German
+  ipa: string;         // phonetic IPA
+  phoneticAr: string;  // Moroccan Arabic phonetic transliteration
+  dz: string;          // Darija — Arabic script (meaning)
+  ar: string;          // Arabic script (kept in sync with dz)
+  mnemonic: string;    // 3o9ola — Darija memory hook
   trap: TrapKey;
 }
 
@@ -76,163 +77,162 @@ const L = (
 ): Track => ({ id, num, tier: `A0·${num}`, title, titleDe, tagline: titleDe, bpm, root, goal, ma3na, qawa3id, steps, words: steps.flatMap((s) => s.items) });
 
 export const TRACKS: Track[] = [
-  L('a01', '01', 'الحوُف والنُّطق', 'Laute', 100, 33,
+  L('a01', '01', 'الحُرُوف والنُّطْق', 'Laute', 100, 33,
     'الحروف الصعبة ديال الألمانية — كيفاش تنطقها بحال الألماني',
     'أول درس: قبل ما تهضر، خاصك تعرف الأصوات اللي كاتقلب المعنى. هادو 8 ديال الكلمات، كل وحدة كتعلّمك صوت.',
     'الصوت فالألمانية ماشي زينة — كايبدل المعنى! «schön» (زوين) و «schon» (دبا) غير نقطة.',
     [
       { title: 'الأصوات اللي ما كايناش فالدارجة', explain: 'هذ الأصوات جداد عليك. سمع كل كلمة، قولها بصوت عالي، و تذكّر العقلة ديالها.', items: [
-        { de: 'schön', ipa: '/ʃøːn/', dz: 'زوِين', ar: 'زوِين', mnemonic: 'ö: دوّر فمك «ou» و قول «é» → «شُون». عقلة: شُون = شي حاجة زوينة!', trap: 'umlaut_o' },
-        { de: 'ich', ipa: '/ɪç/', dz: 'أنا', ar: 'أنا', mnemonic: 'الـ ch هنا «شش» خفيفة ببسمة → «إِش». عقلة: إِش = أنا، و نتي كاتبتسم.', trap: 'ich' },
-        { de: 'die Zeit', ipa: '/tsaɪt/', dz: 'الوقت', ar: 'الوقت', mnemonic: 'z = «تس» → «تْسايت». عقلة: الوقت غالي بحال الزيت الحرة!', trap: 'z_ts' },
-        { de: 'das Wasser', ipa: '/ˈvasɐ/', dz: 'الما', ar: 'الما', mnemonic: 'w = «ڤ» → «ڤاسَر». عقلة: الڤ كاتجري بحال الما.', trap: 'w_v' },
+        { de: 'schön', ipa: '/ʃøːn/', phoneticAr: 'شُونْ', dz: 'زوِين', ar: 'زوِين', mnemonic: 'ö: دوّر فمك «ou» و قول «é» (بحال peu). عقلة: شُون = شي حاجة زوينة!', trap: 'umlaut_o' },
+        { de: 'ich', ipa: '/ɪç/', phoneticAr: 'إِشْ', dz: 'أَنَا', ar: 'أنا', mnemonic: 'الـ ch هنا «شش» خفيفة ببسمة. عقلة: إِشْ = أنا، بتبسيمة!', trap: 'ich' },
+        { de: 'die Zeit', ipa: '/tsaɪt/', phoneticAr: 'دِي تْسَايْتْ', dz: 'الوَقْتْ', ar: 'الوقت', mnemonic: 'z = «تس» ديما: تسايت = الوقت، غالي بحال الزيت الحرة!', trap: 'z_ts' },
+        { de: 'das Wasser', ipa: '/ˈvasɐ/', phoneticAr: 'دَاسْ ڤَاسَرْ', dz: 'المَا', ar: 'الما', mnemonic: 'w = «ڤ» ديما: ڤاسر = الما كيجري بحال الواد!', trap: 'w_v' },
       ]},
       { title: 'الأصوات اللي كاتلعب عليك', explain: 'هادو باينين ساهلين ولكن فيهم الفخ. ركّز على العقلة باش ما تفلتش.', items: [
-        { de: 'ei', ipa: '/aɪ/', dz: 'آي', ar: 'آي', mnemonic: 'الـ ei ديما «آي» (عكس الإنجليزية!). عقلة: nEIn = «نَاين» = لا… آي!', trap: 'ei' },
-        { de: 'gut', ipa: '/ɡuːt/', dz: 'مزِيَان', ar: 'مزِيَان', mnemonic: 'g قاسحة «گ» → «گوت». عقلة: الگوت = المزيان، قاسح!', trap: 'g_hard' },
-        { de: 'die Straße', ipa: '/ˈʃtʁaːsə/', dz: 'الزنقة', ar: 'الزنقة', mnemonic: 'ß = س طويلة + st = «شت» → «شتراسه». عقلة: الزنقة طويلة بحال الـ ß.', trap: 's_sharp' },
-        { de: 'der Name', ipa: '/ˈnaːmə/', dz: 'السمية', ar: 'السمية', mnemonic: 'الـ a هنا «آ» واضحة → «نامَه». عقلة: السمية ديالك، قولها ب «آ».', trap: 'short_vowel' },
+        { de: 'ei', ipa: '/aɪ/', phoneticAr: 'آيْ', dz: 'آيْ (حرف)', ar: 'آي', mnemonic: 'الـ ei ديما «آي» (عكس الإنجليزية!): nein = ناين!', trap: 'ei' },
+        { de: 'gut', ipa: '/ɡuːt/', phoneticAr: 'گُوتْ', dz: 'مْزْيَانْ', ar: 'مزيان', mnemonic: 'g قاسحة «گ» ديما: گوت = مزيان، قاسح!', trap: 'g_hard' },
+        { de: 'die Straße', ipa: '/ˈʃtʁaːsə/', phoneticAr: 'دِي شْتْرَاسَه', dz: 'الشَّارِع / الزَّنْقَة', ar: 'الشارع', mnemonic: 'ß = س طويلة + st = «شت»: شتراسه = الزنقة الكبيرة!', trap: 's_sharp' },
+        { de: 'der Name', ipa: '/ˈnaːmə/', phoneticAr: 'دِيرْ نَامَه', dz: 'السّمِيّة', ar: 'السمية', mnemonic: 'الـ a هنا مد بالفتحة: نامَه = السمية ديالك!', trap: 'short_vowel' },
       ]},
     ],
   ),
 
-  L('a02', '02', 'الأرقُم من صفر ل عشرة', 'Zahlen', 108, 31,
+  L('a02', '02', 'الأرْقَام من 0 لـ 10', 'Zahlen', 108, 31,
     'تعلّم تعدّ من 0 ل 10 — الأساس ديال كل شي: الفلوس، الوقت، العمر',
     'العدّ هو أول حاجة كاتحتاج: تشري شي حاجة، تقول عمرك، تشوف الثمن. غادي نتعلمو من null ل zehn بعقلة لكل رقم.',
     'فالعدّ، الـ zwei (جوج) كاتجي معا الـ z = «تس». و الـ zehn (عشرة) حتى هي ب «تس». تسنتبه!',
     [
       { title: 'من صفر ل خمسة', explain: 'قول كل رقم بصوت عالي. العقلة كتخليه يلصق ف الراس.', items: [
-        { de: 'null', ipa: '/nʊl/', dz: 'صفر', ar: 'صفر', mnemonic: 'null = «نول» = والو، صفر. عقلة: هاد الدري نول = ما عندو والو، صفر!', trap: 'short_vowel' },
-        { de: 'eins', ipa: '/aɪns/', dz: 'واحد', ar: 'واحد', mnemonic: 'eins = «آينس». عقلة: الـ ein وحدة = واحد.', trap: 'ei' },
-        { de: 'zwei', ipa: '/tsvaɪ/', dz: 'جوُج', ar: 'جوُج', mnemonic: 'zwei = «تسْفاي». عقلة: التس = جوج سنّان.', trap: 'z_ts' },
-        { de: 'drei', ipa: '/draɪ/', dz: 'ثلاثة', ar: 'تلاتة', mnemonic: 'drei = «دْراي». عقلة: الـ d بحال الدال = تلاتة.', trap: 'ei' },
-        { de: 'vier', ipa: '/fiːɐ/', dz: 'ربعة', ar: 'ربعة', mnemonic: 'vier = «فير» (v = ف). عقلة: الـ v = ف ديما: فير = ربعة د الفصول.', trap: 'v_f' },
+        { de: 'null', ipa: '/nʊl/', phoneticAr: 'نُولْ', dz: 'صِفْر', ar: 'صفر', mnemonic: 'null = «نول» = والو، بحال كلمة nul بالدارجة: والو، صفر!', trap: 'short_vowel' },
+        { de: 'eins', ipa: '/aɪns/', phoneticAr: 'آيْنْسْ', dz: 'وَاحِدْ', ar: 'واحد', mnemonic: 'eins = «آينس». عقلة: الـ ein وحدة = واحد!', trap: 'ei' },
+        { de: 'zwei', ipa: '/tsvaɪ/', phoneticAr: 'تْسْڤَايْ', dz: 'جُوجْ', ar: 'جوج', mnemonic: 'zwei = «تسْفاي». عقلة: التس = جوج سنّان!', trap: 'z_ts' },
+        { de: 'drei', ipa: '/draɪ/', phoneticAr: 'دْرَايْ', dz: 'تْلَاتَة', ar: 'تلاتة', mnemonic: 'drei = «دْراي». عقلة: الـ d بحال الدال = تلاتة!', trap: 'ei' },
+        { de: 'vier', ipa: '/fiːɐ/', phoneticAr: 'فِيرْ', dz: 'رْبْعَة', ar: 'ربعة', mnemonic: 'vier = «فير» (v = ف). عقلة: الـ v = ف ديما: فير = ربعة د الفصول!', trap: 'v_f' },
       ]},
       { title: 'من خمسة ل عشرة', explain: 'كمّل العدّ. ملي توصل لzehn، راك صافي كتعرف تعدّ بالألمانية!', items: [
-        { de: 'fünf', ipa: '/fʏnf/', dz: 'خمسة', ar: 'خمسة', mnemonic: 'fünf = «فونف» (ü خفيفة). عقلة: الخمسة ديال الصلوات… فونف!', trap: 'umlaut_u' },
-        { de: 'sechs', ipa: '/zɛks/', dz: 'ستة', ar: 'ستة', mnemonic: 'sechs = «زكس». عقلة: الـ s هنا «ز» خفيفة = ستة.', trap: 'short_vowel' },
-        { de: 'sieben', ipa: '/ˈziːbən/', dz: 'سبعة', ar: 'سبعة', mnemonic: 'sieben = «زيبن». عقلة: الزي = سبعة أيام ف السيمانة.', trap: 'short_vowel' },
-        { de: 'zehn', ipa: '/tseːn/', dz: 'عشرة', ar: 'عشرة', mnemonic: 'zehn = «تسين». عقلة: التسين = عشرة كاملة، تس!', trap: 'z_ts' },
+        { de: 'fünf', ipa: '/fʏnf/', phoneticAr: 'فُونْفْ', dz: 'خَمْسَة', ar: 'خمسة', mnemonic: 'fünf = «فونف» (ü بحال u ف tu). عقلة: الصلوات الخمس… فونف!', trap: 'umlaut_u' },
+        { de: 'sechs', ipa: '/zɛks/', phoneticAr: 'زِكْسْ', dz: 'سْتَّة', ar: 'ستة', mnemonic: 'sechs = «زكس». عقلة: الـ s هنا «ز» خفيفة = ستة!', trap: 'short_vowel' },
+        { de: 'sieben', ipa: '/ˈziːbən/', phoneticAr: 'زِيبْنْ', dz: 'سَبْعَة', ar: 'سبعة', mnemonic: 'sieben = «زيبن». عقلة: الزي = سبعة أيام ف السيمانة!', trap: 'short_vowel' },
+        { de: 'zehn', ipa: '/tseːn/', phoneticAr: 'تْسِينْ', dz: 'عَشْرَة', ar: 'عشرة', mnemonic: 'zehn = «تسين». عقلة: التسين = عشرة كاملة، تس!', trap: 'z_ts' },
       ]},
     ],
   ),
 
-  L('a03', '03', 'الوقت و أيام السيمانة', 'Zeit & Tage', 116, 36,
+  L('a03', '03', 'الوَقْتْ و أيَّام السِّيمَانَة', 'Zeit & Tage', 116, 36,
     'أيام السيمانة السبعة + كيفاش تسول على الوقت و تجاوب',
     'باش تواعد شي حد ولا تعرف فين نتي فالسيمانة، خاصك الأيام. و باش ما تتأخرش، خاصك الوقت. هاد الدرس كيعطيك بجوج.',
     'باش تسول على الوقت: «Wie spät ist es?» = شحال فالوقت؟ الجواب: «Es ist drei Uhr» = الساعة ثلاثة.',
     [
       { title: 'أيام السيمانة', explain: 'الألماني كيخدم بالأيام. حفظهم بالعقلة: كل نهار فيه شي كلمة كتفكرك بيه.', items: [
-        { de: 'Montag', ipa: '/ˈmoːntaːk/', dz: 'الاثنين', ar: 'الاثنين', mnemonic: 'Mond = القمر → مونتاگ. عقلة: الاثنين كاتشوف فيه القمر.', trap: 'short_vowel' },
-        { de: 'Dienstag', ipa: '/ˈdiːnstaːk/', dz: 'الثلاثاء', ar: 'التلات', mnemonic: 'دينستاگ. عقلة: الـ Dienst = الخدمة، الثلاثاء نهار الخدمة.', trap: 'st_sp' },
-        { de: 'Mittwoch', ipa: '/ˈmɪtvɔx/', dz: 'لاربع', ar: 'لاربع', mnemonic: 'Mitt = النص (وسط السيمانة!) → ميتڤوخ. عقلة: لاربع هي النص.', trap: 'ach' },
-        { de: 'Donnerstag', ipa: '/ˈdɔnɐstaːk/', dz: 'لخميس', ar: 'لخميس', mnemonic: 'Donner = الرعد → دونرستاگ. عقلة: لخميس فيه الرعد.', trap: 'st_sp' },
-        { de: 'Freitag', ipa: '/ˈfraɪtaːk/', dz: 'لجمعة', ar: 'لجمعة', mnemonic: 'frei = حر → فرايتاگ. عقلة: لجمعة نهار الحرية!', trap: 'ei' },
+        { de: 'Montag', ipa: '/ˈmoːntaːk/', phoneticAr: 'مُونْتَاگْ', dz: 'التْنِينْ', ar: 'الاثنين', mnemonic: 'Mond = القمر: مونتاگ = الاثنين كاتشوف فيه القمر!', trap: 'short_vowel' },
+        { de: 'Dienstag', ipa: '/ˈdiːnstaːk/', phoneticAr: 'دِينْسْتَاگْ', dz: 'التّْلَاتْ', ar: 'الثلاثاء', mnemonic: 'Dienst = الخدمة: دينستاگ = الثلاث نهار الخدمة!', trap: 'st_sp' },
+        { de: 'Mittwoch', ipa: '/ˈmɪtvɔx/', phoneticAr: 'مِيتْڤُوخْ', dz: 'الأَرْبْعْ', ar: 'الاربعاء', mnemonic: 'Mitt = النص (وسط السيمانة!): ميتڤوخ = لاربع!', trap: 'ach' },
+        { de: 'Donnerstag', ipa: '/ˈdɔnɐstaːk/', phoneticAr: 'دُونِرْسْتَاگْ', dz: 'الخْمِيسْ', ar: 'الخميس', mnemonic: 'Donner = الرعد: دونرستاگ = لخميس فيه الرعد!', trap: 'st_sp' },
+        { de: 'Freitag', ipa: '/ˈfraɪtaːk/', phoneticAr: 'فْرَايْتَاگْ', dz: 'الجُّمُعَة', ar: 'الجمعة', mnemonic: 'frei = حر: فرايتاگ = لجمعة نهار الراحة والحرية!', trap: 'ei' },
       ]},
       { title: 'السبت، الأحد، و الساعة', explain: 'كمل الأيام و تعلم كلمة الساعة باش تجاوب على الوقت.', items: [
-        { de: 'Samstag', ipa: '/ˈzamstaːk/', dz: 'السبت', ar: 'السبت', mnemonic: 'سامستاگ. عقلة: السبت = السوق (سام)!', trap: 'st_sp' },
-        { de: 'Sonntag', ipa: '/ˈzɔntaːk/', dz: 'لحد', ar: 'لحد', mnemonic: 'Sonne = الشمس → زونتاگ. عقلة: لحد فيه الشمس.', trap: 'short_vowel' },
-        { de: 'die Uhr', ipa: '/uːɐ/', dz: 'الساعة', ar: 'الساعة', mnemonic: 'Uhr = «أور». عقلة: الأور = الساعة، الوقت كادور.', trap: 'r_uv' },
+        { de: 'Samstag', ipa: '/ˈzamstaːk/', phoneticAr: 'زَامْسْتَاگْ', dz: 'السَّبْتْ', ar: 'السبت', mnemonic: 'سامستاگ = السبت نهار السوق والراحة!', trap: 'st_sp' },
+        { de: 'Sonntag', ipa: '/ˈzɔntaːk/', phoneticAr: 'زُونْتَاگْ', dz: 'الأَحَدْ', ar: 'الاحد', mnemonic: 'Sonne = الشمس: زونتاگ = لحد فيه الشمس!', trap: 'short_vowel' },
+        { de: 'die Uhr', ipa: '/uːɐ/', phoneticAr: 'دِي أُورْ', dz: 'السَّاعَة', ar: 'الساعة', mnemonic: 'Uhr = «أور»: الساعة، الوقت كيدور!', trap: 'r_uv' },
       ]},
     ],
   ),
-
-  L('a04', '04', 'الحوايج اللي ف الدار', 'Zuhause', 124, 31,
+  L('a04', '04', 'الحوَايِج اللي ف الدَّار', 'Zuhause', 124, 31,
     'سمّي كل حاجة كاينة فالدار: من الباب حتى الضو',
     'الدار هي العالم ديالك كل نهار. ملي كتعرف تسمّي الحوايج اللي حوالك، كتولي قادر توصف حياتك بالألمانية.',
     'كل اسم عندو أداة: der (مذكر) / die (مؤنث) / das (محايد). حفظ الأداة مع الاسم ديما!',
     [
       { title: 'الحوايج الكبار', explain: 'هذو الحوايج اللي كتشوفهم أول ما كتدخل للدار.', items: [
-        { de: 'das Haus', ipa: '/haʊs/', dz: 'الدار', ar: 'الدار', mnemonic: 'Haus = «هاوس» (h منفوسة). عقلة: الهاوس = داركم.', trap: 'h_breath' },
-        { de: 'die Tür', ipa: '/tyːɐ/', dz: 'الباب', ar: 'الباب', mnemonic: 'Tür = «تور» (ü خفيفة). عقلة: الباب كيدور.', trap: 'umlaut_u' },
-        { de: 'das Bett', ipa: '/bɛt/', dz: 'السرير', ar: 'السرير', mnemonic: 'Bett = «بِت». عقلة: البت = البلاصة فين كاتبيت.', trap: 'short_vowel' },
-        { de: 'der Tisch', ipa: '/tɪʃ/', dz: 'الطبلة', ar: 'الطبلة', mnemonic: 'Tisch = «تيش» (sch = ش). عقلة: التيش = الطبلة.', trap: 'sch' },
+        { de: 'das Haus', ipa: '/haʊs/', phoneticAr: 'دَاسْ هَاوسْ', dz: 'الدَّار', ar: 'الدار', mnemonic: 'h منفوسة: هَاوسْ = الدار الكبيرة ديال العائلة!', trap: 'h_breath' },
+        { de: 'die Tür', ipa: '/tyːɐ/', phoneticAr: 'دِي تُورْ', dz: 'البَاب', ar: 'الباب', mnemonic: 'ü خفيفة: دِي تُورْ = الباب اللي كايدوّر!', trap: 'umlaut_u' },
+        { de: 'das Bett', ipa: '/bɛt/', phoneticAr: 'دَاسْ بِتْ', dz: 'الفْرَاشْ / السَّرِير', ar: 'السرير', mnemonic: 'e خفيفة: دَاسْ بِتْ = البلاصة فين كاتبات وترتاح!', trap: 'short_vowel' },
+        { de: 'der Tisch', ipa: '/tɪʃ/', phoneticAr: 'دِيرْ تِيشْ', dz: 'الطَّبْلَة', ar: 'الطبلة', mnemonic: 'sch = ش: دِيرْ تِيشْ = الطبلة فين كاتاكل وتجمع!', trap: 'sch' },
       ]},
       { title: 'الحوايج الصغار', explain: 'كمل: الكورسي، الكوزينة، الشباك، و الضو.', items: [
-        { de: 'der Stuhl', ipa: '/ʃtuːl/', dz: 'الكورسي', ar: 'الكورسي', mnemonic: 'Stuhl = «شتول» (st = شت). عقلة: الشتول = الكورسي.', trap: 'st_sp' },
-        { de: 'die Küche', ipa: '/ˈkʏçə/', dz: 'الكوزينة', ar: 'الكوزينة', mnemonic: 'Küche = «كوشه» (ch خفيفة + ü). عقلة: الكوزينة بحال الكوشة ديال الحومة.', trap: 'ich' },
-        { de: 'das Fenster', ipa: '/ˈfɛnstɐ/', dz: 'الشباك', ar: 'الشباك', mnemonic: 'Fenster = «فنستر». عقلة: الشباك كيشرف على الفن (المنظر).', trap: 'short_vowel' },
-        { de: 'das Licht', ipa: '/lɪçt/', dz: 'الضو', ar: 'الضو', mnemonic: 'Licht = «ليشت» (ch خفيفة). عقلة: اللي شعلت = الضو كينوّر.', trap: 'ich' },
+        { de: 'der Stuhl', ipa: '/ʃtuːl/', phoneticAr: 'دِيرْ شْتُولْ', dz: 'الكُرْسِي', ar: 'الكرسي', mnemonic: 'st = شت: دِيرْ شْتُولْ = الكرسي حدا الطبلة!', trap: 'st_sp' },
+        { de: 'die Küche', ipa: '/ˈkʏçə/', phoneticAr: 'دِي كُوشَه', dz: 'الكُوزِينَة', ar: 'الكوزينة', mnemonic: 'ü + ch خفيفة: كُوشَه بحال كوشة الحومة = الكوزينة الفاعلة!', trap: 'ich' },
+        { de: 'das Fenster', ipa: '/ˈfɛnstɐ/', phoneticAr: 'دَاسْ فِنْسْتَرْ', dz: 'الشَّرْجَمْ', ar: 'الشرجم', mnemonic: 'فِنْسْتَرْ = الشرجم كيشوف ف منظر فنّان!', trap: 'short_vowel' },
+        { de: 'das Licht', ipa: '/lɪçt/', phoneticAr: 'دَاسْ لِيشْتْ', dz: 'الضَّوْ', ar: 'الضو', mnemonic: 'ch خفيفة: لِيشْتْ = اللي شعلت، الضو المنوّر!', trap: 'ich' },
       ]},
     ],
   ),
 
-  L('a05', '05', 'كيفاش تهدر مع الناس', 'Gespräch', 132, 33,
+  L('a05', '05', 'كِيفَاش تْهْضَر مع النَّاس', 'Gespräch', 132, 33,
     'العبارات اللي كتحتاجهم باش تبدا محادثة: سلام، لاباس، شكرا، بسلامة',
     'هادا هو الدرس اللي كايخليك تهضر مع بني آدم من أول دقيقة. سلام، سوال على الحال، شكر، و وداع — هادو هم الأساس.',
     'فالألمانية كاينين بجوج «نتا»: du (للأصحاب) و Sie (رسمي، للكبار ولا اللي ما كتعرفهمش). مع الغرباء ديما Sie!',
     [
       { title: 'البداية: سلام و لاباس', explain: 'كيفاش تحيّي واحد و تسولو على الحال ديالو.', items: [
-        { de: 'Hallo!', ipa: '/haˈloː/', dz: 'سلام!', ar: 'سلام', mnemonic: 'Hallo = «هالو». عقلة: بحال الـ hello ولكن بحرف واحد أقل.', trap: 'h_breath' },
-        { de: 'Wie geht’s?', ipa: '/viː ɡeːts/', dz: 'لاباس؟', ar: 'لاباس', mnemonic: 'Wie geht’s = «ڤي گيتس». عقلة: ڤي گيتس = كيفاش الحال؟', trap: 'g_hard' },
-        { de: 'Ja', ipa: '/jaː/', dz: 'آه', ar: 'آه', mnemonic: 'ja = «يا» (j = ي). عقلة: يا! = آه، موافق.', trap: 'j_y' },
-        { de: 'Nein', ipa: '/naɪn/', dz: 'لا', ar: 'لا', mnemonic: 'nein = «نَاين» (ei = آي). عقلة: الناين = لا، عكس الإنجليزية!', trap: 'ei' },
+        { de: 'Hallo!', ipa: '/haˈloː/', phoneticAr: 'هَالُو!', dz: 'سَلَامْ!', ar: 'سلام', mnemonic: 'h منفوسة: هَالُو = سلام عليكم بالحرارة!', trap: 'h_breath' },
+        { de: 'Wie geht’s?', ipa: '/viː ɡeːts/', phoneticAr: 'ڤِي گِيتْسْ؟', dz: 'لَابَاسْ؟ / كِيدَايِرْ؟', ar: 'لاباس', mnemonic: 'w = ڤ و g قاسحة: ڤِي گِيتْسْ = كيفاش غادية الأمور؟', trap: 'g_hard' },
+        { de: 'Ja', ipa: '/jaː/', phoneticAr: 'يَا', dz: 'إِييِه / آه', ar: 'آه', mnemonic: 'j = ي: يَا = إييه، نعم بكل تأكيد!', trap: 'j_y' },
+        { de: 'Nein', ipa: '/naɪn/', phoneticAr: 'نَايْنْ', dz: 'لَا', ar: 'لا', mnemonic: 'ei = آي: نَايْنْ = لا، قاطعة وما فيهاش شك!', trap: 'ei' },
       ]},
       { title: 'الأدب: شكرا، عفاك، بسلامة', explain: 'العبارات اللي كاتوري بلي نتا إنسان مربي — و كاتحل ليك البيبان.', items: [
-        { de: 'Danke!', ipa: '/ˈdaŋkə/', dz: 'شكراً!', ar: 'شكرا', mnemonic: 'Danke = «دانكه» (ng فالخيشوم). عقلة: الشكر بالدانك.', trap: 'ng' },
-        { de: 'Bitte!', ipa: '/ˈbɪtə/', dz: 'عفاك!', ar: 'عفاك', mnemonic: 'Bitte = «بيته». عقلة: البيت = عفاك / على حسابك.', trap: 'short_vowel' },
-        { de: 'Entschuldigung', ipa: '/ɛntˈʃʊldɪɡʊŋ/', dz: 'سمح ليا', ar: 'سمح ليا', mnemonic: 'Entschuldigung = «إنتشولديگونغ». عقلة: طويلة ولكن تعني غير «سمح ليا».', trap: 'ng' },
-        { de: 'Tschüss!', ipa: '/tʃʏs/', dz: 'بسلامة!', ar: 'بسلامة', mnemonic: 'Tschüss = «تشوس» (tsch = تش). عقلة: التشوس = بسلامة، بحال التش ديالنا.', trap: 'tsch' },
+        { de: 'Danke!', ipa: '/ˈdaŋkə/', phoneticAr: 'دَانْكَه!', dz: 'شُكْراً!', ar: 'شكرا', mnemonic: 'ng خيشومية: دَانْكَه = شكراً بزاف على كل خير!', trap: 'ng' },
+        { de: 'Bitte!', ipa: '/ˈbɪtə/', phoneticAr: 'بِيتَه!', dz: 'عَفَاكْ / مَرْحْبَا', ar: 'عفاك', mnemonic: 'حرف قصير: بِيتَه = عفاك ولا مرحبا بك، كلمة الأدب!', trap: 'short_vowel' },
+        { de: 'Entschuldigung', ipa: '/ɛntˈʃʊldɪɡʊŋ/', phoneticAr: 'إِنْتْشُولْدِيگُونْگْ', dz: 'سْمَحْ لِيَّا', ar: 'سمح ليا', mnemonic: 'tsch = تش و g قاسحة: إِنْتْشُولْدِيگُونْگْ = سمح ليا بزاف!', trap: 'ng' },
+        { de: 'Tschüss!', ipa: '/tʃʏs/', phoneticAr: 'تْشُوسْ!', dz: 'بْسْلَامَة!', ar: 'بسلامة', mnemonic: 'tsch = تش و ü: تْشُوسْ = بسلامة وتهلا فراسك!', trap: 'tsch' },
       ]},
     ],
   ),
 
-  L('a06', '06', 'شوية ديال القواعد', 'Grammatik', 140, 36,
+  L('a06', '06', 'قَوَاعِد ألمانية أساسية', 'Grammatik', 140, 36,
     'der/die/das، الفعل فالبلاصة الثانية، و الفرق بين du و Sie',
     'دابا راك كتعرف الكلمات — هاد الدرس كيعلمك كيفاش تلمهم فجملة صحيحة. قواعد بسيطة ولكن هما اللي كايخلو الكلام مفهوم.',
     'القاعدة الذهبية: الفعل ديما فالبلاصة الثانية فالجملة. «Ich BIN müde» — أنا كاعية. الـ bin فالبلاصة 2.',
     [
       { title: 'الأدوات: der, die, das', explain: 'كل اسم عندو أداة (بحال «ال» فالعربية). حفظها مع الاسم ديما!', items: [
-        { de: 'der Mann', ipa: '/man/', dz: 'الراجل', ar: 'الراجل', mnemonic: 'der = للمذكر. عقلة: der Mann = الراجل، der بحال الـ «د».', trap: 'short_vowel' },
-        { de: 'die Frau', ipa: '/fʁaʊ/', dz: 'المرا', ar: 'المرا', mnemonic: 'die = للمؤنث. عقلة: die Frau = المرا.', trap: 'r_uv' },
-        { de: 'das Kind', ipa: '/kɪnt/', dz: 'الدرّي', ar: 'الدري', mnemonic: 'das = للمحايد. عقلة: das Kind = الدرّي الصغير.', trap: 'short_vowel' },
-        { de: 'und', ipa: '/ʊnt/', dz: 'و', ar: 'و', mnemonic: 'und = «أونت» = و. عقلة: الأونت كاتربط بجوج حوايج.', trap: 'short_vowel' },
+        { de: 'der Mann', ipa: '/man/', phoneticAr: 'دِيرْ مَانْ', dz: 'الرَّاجِل', ar: 'الراجل', mnemonic: 'der للمذكر: دِيرْ مَانْ = الراجل!', trap: 'short_vowel' },
+        { de: 'die Frau', ipa: '/fʁaʊ/', phoneticAr: 'دِي فْرَاوْ', dz: 'المْرَا', ar: 'المرا', mnemonic: 'die للمؤنث: دِي فْرَاوْ = المرا الكريمة!', trap: 'r_uv' },
+        { de: 'das Kind', ipa: '/kɪnt/', phoneticAr: 'دَاسْ كِينْدْ', dz: 'الدَّرِّي الصَّغِير', ar: 'الدري', mnemonic: 'das للمحايد: دَاسْ كِينْدْ = الولد الصغير ولا الدري!', trap: 'short_vowel' },
+        { de: 'und', ipa: '/ʊnt/', phoneticAr: 'أُونْدْ', dz: 'وْ (وَ)', ar: 'و', mnemonic: 'أُونْدْ = الواو اللي كتربط بين جوج حوايج!', trap: 'short_vowel' },
       ]},
       { title: 'الفعل و «نتا»', explain: 'الفعل كيدير فالبلاصة الثانية، و كاينين بجوج «نتا».', items: [
-        { de: 'Ich bin…', ipa: '/ɪç bɪn/', dz: 'أنا…', ar: 'أنا', mnemonic: 'Ich bin = «إش بين». عقلة: الفعل bin فالبلاصة 2.', trap: 'ich' },
-        { de: 'du', ipa: '/duː/', dz: 'نتا/نتي', ar: 'نتا', mnemonic: 'du = «دو» = نتا (للأحاب). عقلة: الدو = صاحبك.', trap: 'short_vowel' },
-        { de: 'Sie', ipa: '/ziː/', dz: 'نتوما (رسمي)', ar: 'نتوما', mnemonic: 'Sie = «زي» = نتوما الرسمي. عقلة: الزي = الاحترام.', trap: 'short_vowel' },
-        { de: 'nicht', ipa: '/nɪçt/', dz: 'ماشي', ar: 'ماشي', mnemonic: 'nicht = «نيشت» = ماشي/لا. عقلة: ماشي نيشان = نيشت، كتنفي الهضرة.', trap: 'ich' },
+        { de: 'Ich bin…', ipa: '/ɪç bɪn/', phoneticAr: 'إِشْ بِينْ…', dz: 'أَنَا…', ar: 'أنا', mnemonic: 'الفعل ديما فالبلاصة 2: إِشْ بِينْ = أنا كاين!', trap: 'ich' },
+        { de: 'du', ipa: '/duː/', phoneticAr: 'دُو', dz: 'نْتَا / نْتِي', ar: 'نتا', mnemonic: 'دُو = نتا ولا نتي (للأصحاب والعائلة)!', trap: 'short_vowel' },
+        { de: 'Sie', ipa: '/ziː/', phoneticAr: 'زِي', dz: 'نْتُومَا (رسمي)', ar: 'نتوما', mnemonic: 'زِي بحرف كبير = نتوما ديال الاحترام مع الغرباء!', trap: 'short_vowel' },
+        { de: 'nicht', ipa: '/nɪçt/', phoneticAr: 'نِيشْتْ', dz: 'مَاشِي (نَفْي)', ar: 'ماشي', mnemonic: 'ch خفيفة: نِيشْتْ = ماشي، كتقلب الجملة للنفي!', trap: 'ich' },
       ]},
     ],
   ),
 
-  L('a07', '07', 'الماكلة و الشراب', 'Essen & Trinken', 112, 35,
+  L('a07', '07', 'المَاكْلَة و الشْرَاب', 'Essen & Trinken', 112, 35,
     'سمّي الماكلة و الشراب الأساسي: الخبز، الما، القهوة، و السكر',
     'الجوع و العطش ما كيتسناوش! فهاد الدرس غاتعلم كيفاش تطلب ما تاكل و ما تشرب فالقهوة ولا المطعم.',
     'باش تطلب بأدب: «Ich möchte… bitte» = بغيت… عفاك. مثلا: «Ein Kaffee, bitte!» = قهوة، عفاك.',
     [
       { title: 'الشراب و القهوة', explain: 'كيفاش تطلب الشراب و شنو كدير فيه.', items: [
-        { de: 'der Kaffee', ipa: '/ˈkafe/', dz: 'القهوة', ar: 'القهوة', mnemonic: 'Kaffee = «كافي». عقلة: الكافي بحال القهوة، كافية تنشطك!', trap: 'short_vowel' },
-        { de: 'der Tee', ipa: '/teː/', dz: 'أتاي', ar: 'أتاي', mnemonic: 'Tee = «تي». عقلة: التي = أتاي، ساهلة بحال الشاي بالإنجليزية.', trap: 'short_vowel' },
-        { de: 'das Wasser', ipa: '/ˈvasɐ/', dz: 'الما', ar: 'الما', mnemonic: 'Wasser = «ڤاسر» (w = ڤ). عقلة: الڤاسر ضروري للحياة.', trap: 'w_v' },
-        { de: 'der Zucker', ipa: '/ˈtsʊkɐ/', dz: 'السكر', ar: 'السكر', mnemonic: 'Zucker = «تسُوكر» (z = تس). عقلة: السكر كيتسوس ف القهوة!', trap: 'z_ts' },
+        { de: 'der Kaffee', ipa: '/ˈkafe/', phoneticAr: 'دِيرْ كَافِي', dz: 'القَهْوَة', ar: 'القهوة', mnemonic: 'دِيرْ كَافِي = القهوة كافية باش تصحصح الصباح!', trap: 'short_vowel' },
+        { de: 'der Tee', ipa: '/teː/', phoneticAr: 'دِيرْ تِي', dz: 'أَتَايْ', ar: 'أتاي', mnemonic: 'دِيرْ تِي = براد أتاي كيهدّن الأعصاب!', trap: 'short_vowel' },
+        { de: 'das Wasser', ipa: '/ˈvasɐ/', phoneticAr: 'دَاسْ ڤَاسَرْ', dz: 'المَا', ar: 'الما', mnemonic: 'w = ڤ: دَاسْ ڤَاسَرْ = الما البارد المنعش!', trap: 'w_v' },
+        { de: 'der Zucker', ipa: '/ˈtsʊkɐ/', phoneticAr: 'دِيرْ تْسُوكرْ', dz: 'السُّكَّار', ar: 'السكر', mnemonic: 'z = تس: دِيرْ تْسُوكرْ = السكر اللي كيدوب ف الكاس!', trap: 'z_ts' },
       ]},
       { title: 'الماكلة الأساسية', explain: 'الحوايج اللي كتاكلهم كل نهار: الخبز، الحليب، و اللحم.', items: [
-        { de: 'das Brot', ipa: '/bʁoːt/', dz: 'الخبز', ar: 'الخبز', mnemonic: 'Brot = «بْروت» (r حلقية). عقلة: البروت = الخبز طرف العيش.', trap: 'r_uv' },
-        { de: 'die Milch', ipa: '/mɪlç/', dz: 'الحليب', ar: 'الحليب', mnemonic: 'Milch = «ميلش» (ch خفيفة). عقلة: ميلش = حليب بيض ونقي.', trap: 'ich' },
-        { de: 'das Fleisch', ipa: '/flaɪʃ/', dz: 'اللحم', ar: 'اللحم', mnemonic: 'Fleisch = «فلايش» (ei = آي + sch = ش). عقلة: الفلايش = اللحم كيتشوا.', trap: 'ei' },
-        { de: 'der Apfel', ipa: '/ˈapfl̩/', dz: 'التفاحة', ar: 'التفاحة', mnemonic: 'Apfel = «أبفل» (pf فدفع واحد). عقلة: الأبفل = تفاحة صحية ف الصباح.', trap: 'pf' },
+        { de: 'das Brot', ipa: '/bʁoːt/', phoneticAr: 'دَاسْ بْرُوتْ', dz: 'الخُبْز', ar: 'الخبز', mnemonic: 'r حلقية: دَاسْ بْرُوتْ = طرف الخبز السخون!', trap: 'r_uv' },
+        { de: 'die Milch', ipa: '/mɪlç/', phoneticAr: 'دِي مِيلْشْ', dz: 'الحْلِيب', ar: 'الحليب', mnemonic: 'ch خفيفة: دِي مِيلْشْ = كاس الحليب الأبيض الصحي!', trap: 'ich' },
+        { de: 'das Fleisch', ipa: '/flaɪʃ/', phoneticAr: 'دَاسْ فْلَايْشْ', dz: 'اللّْحَم', ar: 'اللحم', mnemonic: 'ei = آي و sch = ش: دَاسْ فْلَايْشْ = اللحم المحمر الفاعل!', trap: 'ei' },
+        { de: 'der Apfel', ipa: '/ˈapfl̩/', phoneticAr: 'دِيرْ أَبْفِلْ', dz: 'التُّفَّاحَة', ar: 'التفاحة', mnemonic: 'pf دفعة واحدة: دِيرْ أَبْفِلْ = التفاحة البلدية المقرمشة!', trap: 'pf' },
       ]},
     ],
   ),
 
-  L('a08', '08', 'الطريق و البلايص', 'Unterwegs', 120, 38,
+  L('a08', '08', 'الطّرِيق و البْلايْص', 'Unterwegs', 120, 38,
     'الاتجاهات و وسائل النقل: الطران، المحطة، ليمن، و ليسر',
     'باش ما تودرش فالمدينة، خاصك تفهم فين غادي و كيفاش تسول على الطريق.',
     'باش تسول على البلاصة: «Wo ist…?» = فين كاين…؟ مثلا: «Wo ist der Bahnhof?» = فين كاينا لابان؟',
     [
       { title: 'الاتجاهات فالزنقة', explain: 'ليمن، ليسر، و نيشان: الكلمات اللي كيعطيك البوليسي ولا الگيد.', items: [
-        { de: 'rechts', ipa: '/ʁɛçts/', dz: 'على ليمن', ar: 'ليمن', mnemonic: 'rechts = «ريشتس» (ch خفيفة + ts). عقلة: ريشتس = دور على ليمن.', trap: 'ich' },
-        { de: 'links', ipa: '/lɪŋks/', dz: 'على ليسر', ar: 'ليسر', mnemonic: 'links = «لينكس» (ng فالخيشوم). عقلة: لينكس = عكس ليمن، على ليسر.', trap: 'ng' },
-        { de: 'geradeaus', ipa: '/ɡəˈʁaːdəˈʔaʊs/', dz: 'نيشان / كود نيشان', ar: 'نيشان', mnemonic: 'geradeaus = «گيرادياوس» (g قاسحة). عقلة: گيرادياوس = سير كود نيشان بلا عوج.', trap: 'g_hard' },
-        { de: 'die Straße', ipa: '/ˈʃtʁaːsə/', dz: 'الشارع / الزنقة', ar: 'الشارع', mnemonic: 'Straße = «شتراسه» (st = شت + ß = س). عقلة: الشتراسه = الشارع الكبير.', trap: 'st_sp' },
+        { de: 'rechts', ipa: '/ʁɛçts/', phoneticAr: 'غِيشْتْسْ', dz: 'عْلَى لِيمَن', ar: 'ليمن', mnemonic: 'ch خفيفة و ts: غِيشْتْسْ = دور على ليمن ديريكت!', trap: 'ich' },
+        { de: 'links', ipa: '/lɪŋks/', phoneticAr: 'لِينْكْسْ', dz: 'عْلَى لِيسَرْ', ar: 'ليسر', mnemonic: 'ng خيشومية: لِينْكْسْ = دور على ليسر بلا تردد!', trap: 'ng' },
+        { de: 'geradeaus', ipa: '/ɡəˈʁaːdəˈʔaʊs/', phoneticAr: 'گِيرَادِه‌آوْسْ', dz: 'كُودْ نِيشَان', ar: 'نيشان', mnemonic: 'g قاسحة: گِيرَادِه‌آوْسْ = سير نيشان كود بلا ما تعوج!', trap: 'g_hard' },
+        { de: 'die Straße', ipa: '/ˈʃtʁaːsə/', phoneticAr: 'دِي شْتْرَاسَه', dz: 'الشَّارِع / الزَّنْقَة', ar: 'الشارع', mnemonic: 'st = شت و ß = س: شْتْرَاسَه = الشارع الكبير العريض!', trap: 'st_sp' },
       ]},
       { title: 'وسائل النقل و المحطة', explain: 'الطران، الطوموبيل، و لابان باش تسافر.', items: [
-        { de: 'der Bahnhof', ipa: '/ˈbaːnhoːf/', dz: 'محطة الطران (لارگار)', ar: 'المحطة', mnemonic: 'Bahnhof = «بانهوف» (h منفوسة). عقلة: البانهوف = لارگار فين كيشدك الطران.', trap: 'h_breath' },
-        { de: 'der Zug', ipa: '/tsuːk/', dz: 'الطران', ar: 'الطران', mnemonic: 'Zug = «تسوك» (z = تس). عقلة: التسوك = الطران كيتسلت ف السكة!', trap: 'z_ts' },
-        { de: 'das Auto', ipa: '/ˈaʊto/', dz: 'الطوموبيل', ar: 'الطوموبيل', mnemonic: 'Auto = «أوتو». عقلة: الأوتو بحال الأوتوبان = طوموبيل.', trap: 'short_vowel' },
-        { de: 'das Ticket', ipa: '/ˈtɪkət/', dz: 'التذكرة (البورقة)', ar: 'التذكرة', mnemonic: 'Ticket = «تيكيت». عقلة: التيكيت = الورقة باش تركب.', trap: 'short_vowel' },
+        { de: 'der Bahnhof', ipa: '/ˈbaːnhoːf/', phoneticAr: 'دِيرْ بَانْهُوفْ', dz: 'مَحَطَّة الطْرَان (لاَرگَار)', ar: 'المحطة', mnemonic: 'h منفوسة: دِيرْ بَانْهُوفْ = لارگار فين كيركب بنادم!', trap: 'h_breath' },
+        { de: 'der Zug', ipa: '/tsuːk/', phoneticAr: 'دِيرْ تْسُوكْ', dz: 'الطْرَان', ar: 'الطران', mnemonic: 'z = تس: دِيرْ تْسُوكْ = الطران كيتسلت ف السكة بالسرعة!', trap: 'z_ts' },
+        { de: 'das Auto', ipa: '/ˈaʊto/', phoneticAr: 'دَاسْ أُوتُو', dz: 'الطُّومُوبِيل', ar: 'الطوموبيل', mnemonic: 'دَاسْ أُوتُو = الطوموبيل ف الأوتوبان الألماني!', trap: 'short_vowel' },
+        { de: 'das Ticket', ipa: '/ˈtɪkət/', phoneticAr: 'دَاسْ تِيكِيتْ', dz: 'التَّذْكِرَة (الوَرْقَة)', ar: 'التذكرة', mnemonic: 'دَاسْ تِيكِيتْ = الورقة ديال الركوب باش ما يقطعكش الكنترولور!', trap: 'short_vowel' },
       ]},
     ],
   ),

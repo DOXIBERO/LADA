@@ -61,7 +61,7 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
               <h2 className={`font-display text-4xl md:text-5xl rise ${verdict.passed ? 'text-lime text-glow-lime' : 'text-mag text-glow-mag'}`}>
                 {verdict.passed ? (mode === 'revenge' ? 'REVENGE EXECUTED' : 'TRACK MASTERED') : 'SIGNAL LOST'}
               </h2>
-              <p className="text-dim mt-1 font-ar">
+              <p className="text-dim mt-1 font-ar text-right" dir="rtl">
                 {verdict.passed
                   ? 'دوزتي الـ Mastery Law. الـ CORE زاد الـ stability ديال كل كلمة.'
                   : `خاص ≥85% — راك ف ${Math.round(overall * 100)}%. ${verdict.failedWords.length} كلم مشاو فالـ CRITICAL list.`}
@@ -134,7 +134,7 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
                 <div className="grid gap-2.5">
                   {coachLines.length === 0 && <div className="text-dim blink">ANALYZING…</div>}
                   {coachLines.map((l, i) => (
-                    <div key={i} className="rise chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2.5 text-ink leading-relaxed font-ar text-[15px]" style={{ animationDelay: `${i * 160}ms` }}>
+                    <div key={i} className="rise chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2.5 text-ink leading-relaxed font-ar text-[15px] text-right" dir="rtl" style={{ animationDelay: `${i * 160}ms` }}>
                       <span className="text-cyan ml-2">▸</span>{l}
                     </div>
                   ))}
@@ -144,7 +144,7 @@ export default function Results({ track, mode, hw, vocal, overall, verdict, coac
               {allDone && (
                 <div className="panel chamfer panel-lime p-5 rise text-center">
                   <div className="font-display text-3xl text-lime text-glow-lime mb-1">FLUENCY PROTOCOL COMPLETE</div>
-                  <p className="text-ink font-ar text-lg">مبروك أ شومبيون — تلاتة ديال التييرز، كاملين mastered. دابا الألمانية كاتبدأ كاتريّڤ بالدارجة.</p>
+                  <p className="text-ink font-ar text-lg" dir="rtl">مبروك أ شومبيون — كاملين mastered. دابا الألمانية كاتبدأ كاتريّڤ بالدارجة.</p>
                 </div>
               )}
 

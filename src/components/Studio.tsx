@@ -132,23 +132,35 @@ export default function Studio({ track, onReady, onExit }: Props) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setChatOpen((o) => !o); audio.uiClick(); }}
-              className={`neon-btn ${hasLiveKey() ? 'neon-btn-lime' : ''} chamfer-sm px-4 py-2 text-xs`}
+              className={`neon-btn ${hasLiveKey() ? 'neon-btn-lime' : ''} chamfer-sm px-3.5 py-2 text-xs font-mono`}
             >
               ✦ AI TUTOR {hasLiveKey() ? '· LIVE' : '· CORE'}
             </button>
-            <button
-              onClick={onReady}
-              disabled={!quizDone}
-              className="neon-btn neon-btn-mag chamfer px-5 py-2.5 text-sm pulse-mag"
-            >
-              {quizDone ? '▶ HIGHWAY' : 'دوز التشيكپوان'}
-            </button>
+            {quizDone ? (
+              <button
+                onClick={onReady}
+                className="neon-btn neon-btn-mag chamfer px-5 py-2.5 text-sm pulse-mag font-ar font-bold"
+              >
+                ▶ دخل لـ HIGHWAY
+              </button>
+            ) : phase === 'learn' ? (
+              <button
+                onClick={() => { setPhase('quiz'); audio.uiOpen(); }}
+                className="neon-btn neon-btn-cyan chamfer px-4 py-2 text-xs font-ar"
+              >
+                دوز للتشيكپوان ◀
+              </button>
+            ) : null}
           </div>
         </div>
 
         {/* goal line */}
-        <div className="chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2 mb-4 font-ar text-[15px] text-ink">
-          <span className="panel-tag ml-2">الهدف</span> {track.goal}
+        <div className="chamfer-sm border border-cyan/25 bg-cyan/5 px-4 py-2.5 mb-4 font-ar text-[15px] text-ink flex items-center justify-between gap-3" dir="rtl">
+          <div className="flex items-center gap-2">
+            <span className="panel-tag">الهدف:</span>
+            <span>{track.goal}</span>
+          </div>
+          <span className="text-xs text-dim font-mono hidden sm:inline" dir="ltr">{track.words.length} WORDS · {track.bpm} BPM</span>
         </div>
 
         {/* body: learn or quiz */}
@@ -167,27 +179,64 @@ export default function Studio({ track, onReady, onExit }: Props) {
                 </div>
               </div>
 
-              <h2 className="font-ar text-3xl md:text-4xl text-ink mb-1">{step.title}</h2>
-              <p className="font-ar text-lg text-dim mb-5 leading-relaxed max-w-3xl">{step.explain}</p>
+              <h2 className="font-ar text-2xl md:text-3xl font-bold text-ink mb-2 text-right" dir="rtl">{step.title}</h2>
+              <p className="font-ar text-base md:text-lg text-dim mb-5 leading-relaxed max-w-3xl text-right" dir="rtl">{step.explain}</p>
 
               {/* word cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {step.items.map((w, i) => (
-                  <div key={w.de} className="panel chamfer p-5 rise" style={{ animationDelay: `${i * 80}ms` }}>
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-display text-3xl text-ink text-glow-cyan">{w.de}</span>
-                      <span className="text-dim text-sm">{w.ipa}</span>
+                  <div key={w.de} className="panel chamfer p-4 md:p-5 rise flex flex-col justify-between" style={{ animationDelay: `${i * 70}ms` }}>
+                    <div>
+                      {/* German Header (LTR) */}
+                      <div className="flex items-center justify-between gap-2 border-b border-line/50 pb-2 mb-3" dir="ltr">
+                        <div className="flex items-baseline gap-2.5">
+                          <span className="font-display text-2xl md:text-3xl font-bold text-ink text-glow-cyan tracking-wide">{w.de}</span>
+                          <span className="text-dim/80 font-mono text-xs px-2 py-0.5 rounded bg-panel2 border border-line/40">{w.ipa}</span>
+                        </div>
+                        <span className="chamfer-sm bg-cyan/10 border border-cyan/30 text-cyan px-2 py-0.5 text-[11px] font-ar shrink-0">
+                          {TRAPS[w.trap].label}
+                        </span>
+                      </div>
+
+                      {/* Darija Meaning & Transliteration (RTL) */}
+                      <div className="flex items-center justify-between gap-2 mb-3" dir="rtl">
+                        <div className="font-ar text-2xl font-bold text-cyan text-glow-cyan">{w.dz}</div>
+                        <div className="flex items-center gap-1.5 bg-lime/10 border border-lime/30 px-2.5 py-1 chamfer-sm">
+                          <span className="text-[11px] text-dim font-ar">النطق:</span>
+                          <span className="font-ar text-base font-bold text-lime tracking-wide">{w.phoneticAr}</span>
+                        </div>
+                      </div>
+
+                      {/* Mnemonic (3o9ola) with strict BiDi isolation */}
+                      <div className="chamfer-sm bg-mag/10 border border-mag/30 px-3.5 py-2.5 font-ar text-[14px] text-ink leading-relaxed mb-3 text-right" dir="rtl">
+                        <span className="text-mag font-bold ml-1.5 inline-block">العقلة:</span>
+                        <bdi className="text-ink/95">{w.mnemonic}</bdi>
+                      </div>
+
+                      {/* Mouth-position phonetic coach tip */}
+                      <div className="chamfer-sm bg-panel2/80 border border-line/40 px-3 py-2 text-[12px] font-ar text-dim leading-relaxed text-right" dir="rtl">
+                        <span className="text-cyan font-semibold ml-1.5 inline-block">نصيحة النطق:</span>
+                        <span>{TRAPS[w.trap].tip}</span>
+                      </div>
                     </div>
-                    <div className="font-ar text-2xl text-cyan mt-1" dir="rtl">{w.dz}</div>
-                    <div className="mt-3 chamfer-sm bg-mag/8 border border-mag/30 px-3 py-2 font-ar text-[15px] text-ink leading-relaxed">
-                      <span className="text-mag font-semibold">العقلة:</span> {w.mnemonic}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="chamfer-sm bg-cyan/8 border border-cyan/30 text-cyan px-2 py-0.5 text-[11px] font-ar">
-                        {TRAPS[w.trap].label}
-                      </span>
-                      <button onClick={() => { audio.ensure(); audio.speak(w.de); }} className="neon-btn chamfer-sm px-4 py-1.5 text-xs font-ar">
-                        ◉ سمع
+
+                    {/* Audio Speed Controls */}
+                    <div className="mt-4 pt-3 border-t border-line/40 flex items-center justify-end gap-2" dir="ltr">
+                      <button
+                        onClick={() => { audio.ensure(); audio.speak(w.de, 0.65); }}
+                        title="نطق بطيء للتدقيق"
+                        className="neon-btn chamfer-sm px-3 py-1.5 text-xs font-ar flex items-center gap-1 hover:border-amber hover:text-amber"
+                      >
+                        <span>🐢</span>
+                        <span>بشوية (0.65x)</span>
+                      </button>
+                      <button
+                        onClick={() => { audio.ensure(); audio.speak(w.de, 0.9); }}
+                        title="نطق عادي"
+                        className="neon-btn neon-btn-cyan chamfer-sm px-4 py-1.5 text-xs font-ar flex items-center gap-1"
+                      >
+                        <span>🔊</span>
+                        <span>عادي (0.9x)</span>
                       </button>
                     </div>
                   </div>
@@ -195,23 +244,24 @@ export default function Studio({ track, onReady, onExit }: Props) {
               </div>
 
               {step.grammar && (
-                <div className="mt-4 chamfer-sm border border-amber/30 bg-amber/5 px-4 py-3 font-ar text-[15px] text-ink leading-relaxed">
-                  <span className="text-amber font-semibold">قاعدة:</span> {step.grammar}
+                <div className="mt-4 chamfer-sm border border-amber/30 bg-amber/5 px-4 py-3 font-ar text-[15px] text-ink leading-relaxed text-right" dir="rtl">
+                  <span className="text-amber font-bold ml-1.5 inline-block">قاعدة:</span>
+                  <bdi>{step.grammar}</bdi>
                 </div>
               )}
 
               {/* nav */}
-              <div className="flex items-center justify-between mt-6 pb-2">
+              <div className="flex items-center justify-between mt-6 pb-4">
                 <button
                   onClick={() => { if (stepIdx > 0) { setStepIdx(stepIdx - 1); audio.uiClick(); } }}
                   disabled={stepIdx === 0}
-                  className="neon-btn chamfer-sm px-6 py-3 text-sm"
+                  className="neon-btn chamfer-sm px-6 py-3 text-sm font-ar"
                 >
                   ◀ اللي قبل
                 </button>
                 <button
                   onClick={() => { audio.uiOpen(); if (isLastStep) setPhase('quiz'); else setStepIdx(stepIdx + 1); }}
-                  className="neon-btn neon-btn-lime chamfer px-10 py-3.5 text-lg pulse-glow font-ar"
+                  className="neon-btn neon-btn-lime chamfer px-10 py-3.5 text-lg pulse-glow font-ar font-bold"
                 >
                   {isLastStep ? 'التشيكپوان ▶' : 'التالي ▶'}
                 </button>
@@ -220,39 +270,78 @@ export default function Studio({ track, onReady, onExit }: Props) {
           )}
 
           {phase === 'quiz' && (
-            <div className="rise max-w-2xl">
-              <div className="panel-tag mb-2">LEVEL 1 · CHECKPOINT</div>
+            <div className="rise max-w-2xl mx-auto w-full">
+              <div className="flex items-center justify-between mb-3">
+                <div className="panel-tag">LEVEL 1 · CHECKPOINT QUIZ</div>
+                <button
+                  onClick={() => { setPhase('learn'); audio.uiClick(); }}
+                  className="neon-btn chamfer-sm px-3 py-1 text-xs font-ar"
+                >
+                  ◀ رجوع للدرس
+                </button>
+              </div>
+
               {!quizDone && rounds[ri] ? (
-                <div key={ri} className={wrong ? 'shake' : ''}>
-                  <h2 className="font-ar text-2xl text-dim mb-1">شنو كتعني هاد الكلمة؟</h2>
-                  <div className="font-display text-5xl md:text-6xl text-ink text-glow-cyan my-4">{rounds[ri].de}</div>
+                <div key={ri} className={`panel chamfer p-6 ${wrong ? 'shake' : ''}`}>
+                  <div className="flex items-center justify-between text-dim text-sm mb-3">
+                    <span className="font-ar text-base">السؤال {ri + 1} من {rounds.length}</span>
+                    <span className="font-display tracking-widest text-cyan">PROGRESS {Math.round(((ri) / rounds.length) * 100)}%</span>
+                  </div>
+
+                  <h2 className="font-ar text-xl text-dim mb-2 text-right" dir="rtl">شنو كتعني هاد الكلمة بالألمانية؟</h2>
+
+                  <div className="flex items-center justify-between bg-panel2/60 border border-line chamfer p-4 my-4" dir="ltr">
+                    <div className="font-display text-4xl md:text-5xl font-bold text-ink text-glow-cyan tracking-wide">
+                      {rounds[ri].de}
+                    </div>
+                    <button
+                      onClick={() => { audio.ensure(); audio.speak(rounds[ri].de, 0.85); }}
+                      className="neon-btn neon-btn-cyan chamfer-sm px-3 py-2 text-xs flex items-center gap-1 font-ar"
+                      title="سمع النطق"
+                    >
+                      <span>🔊</span>
+                      <span>سمع</span>
+                    </button>
+                  </div>
+
                   <div className="grid gap-3">
-                    {rounds[ri].options.map((opt) => {
+                    {rounds[ri].options.map((opt, optIdx) => {
                       const isR = right === opt, isW = wrong === opt;
+                      const badgeLetters = ['أ', 'ب', 'ج'];
                       return (
                         <button
                           key={opt}
                           onClick={() => pick(opt)}
                           dir="rtl"
-                          className={`chamfer border-2 px-6 py-5 text-right font-ar text-3xl leading-none transition-all duration-100 cursor-pointer
-                            ${isR ? 'border-lime bg-lime/20 text-lime' : isW ? 'border-mag bg-mag/20 text-mag' : 'border-line bg-panel2/70 text-ink hover:border-cyan hover:bg-cyan/10'}`}
+                          className={`chamfer border-2 px-5 py-4 flex items-center justify-between font-ar text-2xl transition-all duration-100 cursor-pointer
+                            ${isR ? 'border-lime bg-lime/20 text-lime font-bold' : isW ? 'border-mag bg-mag/20 text-mag' : 'border-line bg-panel2/80 text-ink hover:border-cyan hover:bg-cyan/10'}`}
                         >
-                          {opt}
+                          <span className="text-right flex-1">{opt}</span>
+                          <span className="text-xs font-mono px-2 py-1 rounded bg-panel/60 border border-line/40 text-dim">
+                            {badgeLetters[optIdx] || optIdx + 1}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
+
                   {wrong && (
-                    <p className="mt-3 font-ar text-lg text-mag">لا! العقلة: {rounds[ri].mnemonic}</p>
+                    <div className="mt-4 chamfer-sm bg-mag/10 border border-mag/40 p-3 font-ar text-base text-mag text-right" dir="rtl">
+                      <span className="font-bold ml-1">لا!</span>
+                      <span className="text-ink ml-1">العقلة:</span>
+                      <bdi className="text-mag">{rounds[ri].mnemonic}</bdi>
+                    </div>
                   )}
-                  <div className="mt-4 text-dim font-display text-sm">{ri + 1} / {rounds.length}</div>
                 </div>
               ) : (
-                <div className="text-center py-10">
-                  <div className="font-ar text-4xl text-lime text-glow-lime mb-3">التشيكپوان صافي!</div>
-                  <p className="font-ar text-lg text-dim mb-8">دابا غادي تدخل لـ Highway — {track.words.length} كلمات، {track.bpm} BPM.</p>
-                  <button onClick={onReady} className="neon-btn neon-btn-mag chamfer px-12 py-4 text-xl pulse-mag font-ar">
-                    ▶ دخل ل Highway
+                <div className="panel chamfer p-8 text-center py-12">
+                  <div className="text-5xl mb-3">🎯</div>
+                  <div className="font-ar text-3xl md:text-4xl text-lime text-glow-lime mb-3 font-bold">التشيكپوان صافي بنجاح!</div>
+                  <p className="font-ar text-lg text-dim mb-8 max-w-md mx-auto leading-relaxed" dir="rtl">
+                    دابا ضبطتي الكلمات ديال الدرس. مستعد تدخل لـ Highway بريتم <span className="text-cyan font-mono">{track.bpm} BPM</span>؟
+                  </p>
+                  <button onClick={onReady} className="neon-btn neon-btn-mag chamfer px-10 py-4 text-xl pulse-mag font-ar font-bold">
+                    ▶ دخل لـ HIGHWAY
                   </button>
                 </div>
               )}
@@ -265,9 +354,10 @@ export default function Studio({ track, onReady, onExit }: Props) {
       {!chatOpen && (
         <button
           onClick={() => { setChatOpen(true); audio.uiClick(); }}
-          className="absolute bottom-5 right-5 z-30 neon-btn neon-btn-lime chamfer px-5 py-3 text-sm pulse-glow font-ar"
+          className="fixed md:absolute bottom-5 right-5 z-30 neon-btn neon-btn-lime chamfer px-5 py-3 text-sm pulse-glow font-ar shadow-lg flex items-center gap-2 whitespace-nowrap"
         >
-          ✦ سول التuteur
+          <span className="text-base">✦</span>
+          <span>سول المساعد الذكي</span>
         </button>
       )}
 

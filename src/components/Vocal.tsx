@@ -424,8 +424,12 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
             <div className="font-display text-4xl md:text-5xl text-ink text-glow-cyan leading-tight">{word.de}</div>
             <div className="text-dim">{word.ipa}</div>
           </div>
-          <div className="text-right" dir="rtl">
-            <div className="font-ar text-3xl text-cyan leading-tight">{word.dz}</div>
+          <div className="text-right flex flex-col items-end gap-1.5" dir="rtl">
+            <div className="font-ar text-3xl text-cyan leading-tight font-bold">{word.dz}</div>
+            <div className="flex items-center gap-1.5 bg-lime/10 border border-lime/30 px-2.5 py-0.5 chamfer-sm">
+              <span className="text-[11px] text-dim font-ar">النطق:</span>
+              <span className="font-ar text-sm font-semibold text-lime">{word.phoneticAr}</span>
+            </div>
           </div>
           {phase === 'grade' && score !== null && (
             <div className="text-center rise">
@@ -453,7 +457,7 @@ export default function Vocal({ track, weakWords, onFinish }: Props) {
           )}
           {phase === 'grade' && coach && (
             <div className="absolute bottom-3 left-3 right-3 rise">
-              <div className="chamfer-sm bg-panel2/95 border border-cyan/30 px-4 py-2 text-[15px] md:text-base text-ink font-ar leading-relaxed">
+              <div className="chamfer-sm bg-panel2/95 border border-cyan/30 px-4 py-2 text-[15px] md:text-base text-ink font-ar leading-relaxed text-right" dir="rtl">
                 <span className="panel-tag ml-2">LADA CORE</span>{coach}
               </div>
             </div>

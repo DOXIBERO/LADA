@@ -49,22 +49,25 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
 
         {/* progress strip */}
         <div className="chamfer panel px-5 py-3 mb-5 flex items-center justify-between gap-4 flex-wrap">
-          <div className="font-ar text-lg text-ink">
-            التقدّم: <span className="text-cyan font-semibold">{masteredCount}</span> / {TRACKS.length} دروس
+          <div className="font-ar text-lg text-ink" dir="rtl">
+            التقدّم: <span className="text-cyan font-bold">{masteredCount}</span> من <span className="text-ink font-bold">{TRACKS.length}</span> دروس
+            <span className="text-xs text-dim font-mono mr-2">({Math.round((masteredCount / TRACKS.length) * 100)}%)</span>
           </div>
-          <div className="flex-1 min-w-[160px] h-2.5 bg-line/60">
+          <div className="flex-1 min-w-[160px] h-2.5 bg-line/60 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-cyan to-lime transition-all duration-700"
               style={{ width: `${(masteredCount / TRACKS.length) * 100}%`, boxShadow: '0 0 10px rgba(0,240,255,0.6)' }}
             />
           </div>
           {snap.critical > 0 && (
-            <div className="font-ar text-mag critical-blink text-sm">⚠ {snap.critical} كلمات فالـ decay</div>
+            <div className="font-ar text-mag critical-blink text-sm" dir="rtl">
+              ⚠ <span className="font-bold">{snap.critical}</span> فالـ decay
+            </div>
           )}
         </div>
 
         {/* learning path */}
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1 grid content-start gap-3 pb-4">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 grid content-start gap-3.5 pb-4">
           {TRACKS.map((t, i) => {
             const unlocked = isUnlocked(profile, t);
             const mastered = isMastered(profile, t);
@@ -74,49 +77,83 @@ export default function Hub({ profile, muted, onToggleMute, onDeploy, onRevenge 
             return (
               <div
                 key={t.id}
-                className={`panel chamfer p-5 rise flex items-center gap-5 flex-wrap
-                  ${revenge ? 'panel-mag' : mastered ? 'panel-lime' : ''}
-                  ${isNext ? 'ring-1 ring-cyan/60 pulse-glow' : ''} ${!unlocked ? 'opacity-45' : ''}`}
-                style={{ animationDelay: `${i * 70}ms` }}
+                className={`panel chamfer p-4 md:p-5 rise flex items-center justify-between gap-4 flex-wrap md:flex-nowrap transition-all duration-200
+                  ${revenge ? 'panel-mag border-mag/50' : mastered ? 'panel-lime border-lime/50' : 'border-line'}
+                  ${isNext ? 'ring-1 ring-cyan/60 shadow-[0_0_15px_rgba(0,240,255,0.15)]' : ''} ${!unlocked ? 'opacity-50' : ''}`}
+                style={{ animationDelay: `${i * 60}ms` }}
               >
-                {/* number */}
-                <div className={`font-display text-2xl w-16 shrink-0 ${mastered ? 'text-lime' : unlocked ? 'text-cyan' : 'text-dim'}`}>
-                  {t.num}
+                {/* number & tier */}
+                <div className="flex flex-col items-center justify-center w-14 shrink-0 text-center border-r border-line/40 pr-3">
+                  <span className={`font-display text-2xl font-bold ${mastered ? 'text-lime' : unlocked ? 'text-cyan' : 'text-dim'}`}>
+                    {t.num}
+                  </span>
+                  <span className="text-[10px] font-mono text-dim tracking-wider">A0</span>
                 </div>
 
-                {/* info */}
-                <div className="flex-1 min-w-[200px]">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-ar text-2xl text-ink">{t.title}</span>
-                    <span className="font-display text-cyan text-sm">{t.titleDe}</span>
-                    {mastered && <span className="chamfer-sm bg-lime/10 border border-lime/50 text-lime px-2 py-0.5 text-[11px] font-ar">متقن ✓</span>}
-                    {revenge && <span className="chamfer-sm bg-mag/15 border border-mag/60 text-mag px-2 py-0.5 text-[11px] font-ar pulse-mag">Revenge ☠</span>}
-                    {isNext && !mastered && <span className="chamfer-sm bg-cyan/10 border border-cyan/50 text-cyan px-2 py-0.5 text-[11px] font-ar">كمّل من هنا</span>}
+                {/* main content */}
+                <div className="flex-1 min-w-[220px]">
+                  <div className="flex items-center gap-2.5 flex-wrap mb-1">
+                    <span className="font-ar text-2xl font-bold text-ink" dir="rtl">{t.title}</span>
+                    <bdi className="font-display text-cyan text-sm px-2 py-0.5 rounded bg-cyan/10 border border-cyan/25 font-semibold tracking-wider">
+                      {t.titleDe}
+                    </bdi>
+                    {mastered && (
+                      <span className="chamfer-sm bg-lime/15 border border-lime/60 text-lime px-2 py-0.5 text-[11px] font-ar font-semibold">
+                        متقن ✓
+                      </span>
+                    )}
+                    {revenge && (
+                      <span className="chamfer-sm bg-mag/20 border border-mag/70 text-mag px-2 py-0.5 text-[11px] font-ar pulse-mag font-semibold">
+                        Revenge ☠
+                      </span>
+                    )}
+                    {isNext && !mastered && (
+                      <span className="chamfer-sm bg-cyan/15 border border-cyan/60 text-cyan px-2 py-0.5 text-[11px] font-ar font-semibold">
+                        كمّل من هنا
+                      </span>
+                    )}
                   </div>
-                  <div className="font-ar text-dim text-[15px] mt-0.5">{t.goal}</div>
-                  <div className="font-ar text-dim/70 text-[13px] mt-1">{t.words.length} كلمات · {t.bpm} BPM</div>
+                  <div className="font-ar text-dim text-sm line-clamp-1" dir="rtl">{t.goal}</div>
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-dim/80 font-mono">
+                    <span>{t.words.length} WORDS</span>
+                    <span>·</span>
+                    <span>{t.bpm} BPM</span>
+                  </div>
                 </div>
 
-                {/* best + action */}
-                <div className="flex items-center gap-4 ml-auto">
+                {/* action & best */}
+                <div className="flex items-center gap-3 shrink-0 ml-auto">
                   {best > 0 && (
-                    <div className="text-right">
-                      <div className="font-display text-sm text-dim">BEST</div>
-                      <div className={`font-display text-xl ${best >= 0.85 ? 'text-lime' : 'text-amber'}`}>{Math.round(best * 100)}%</div>
+                    <div className="text-right pr-2">
+                      <div className="font-display text-[10px] text-dim tracking-wider">BEST</div>
+                      <div className={`font-display text-xl font-bold ${best >= 0.85 ? 'text-lime text-glow-lime' : 'text-amber'}`}>
+                        {Math.round(best * 100)}%
+                      </div>
                     </div>
                   )}
                   {unlocked ? (
                     revenge ? (
-                      <button onClick={() => { audio.ensure(); audio.alarm(); onRevenge(t); }} className="neon-btn neon-btn-mag chamfer px-7 py-3.5 text-base font-ar">
-                        ☠ Revenge
+                      <button
+                        onClick={() => { audio.ensure(); audio.alarm(); onRevenge(t); }}
+                        className="neon-btn neon-btn-mag chamfer px-6 py-3 text-base font-ar font-bold flex items-center gap-1.5"
+                      >
+                        <span>☠</span>
+                        <span>Revenge</span>
                       </button>
                     ) : (
-                      <button onClick={() => { audio.ensure(); audio.uiOpen(); onDeploy(t); }} className="neon-btn neon-btn-lime chamfer px-8 py-3.5 text-lg font-ar pulse-glow">
-                        ▶ ابدأ
+                      <button
+                        onClick={() => { audio.ensure(); audio.uiOpen(); onDeploy(t); }}
+                        className="neon-btn neon-btn-lime chamfer px-7 py-3 text-lg font-ar font-bold pulse-glow flex items-center gap-1.5"
+                      >
+                        <span>▶</span>
+                        <span>ابدأ</span>
                       </button>
                     )
                   ) : (
-                    <div className="chamfer-sm border border-line px-6 py-3 font-ar text-dim">مسدود — دوز {TRACKS[i - 1].title}</div>
+                    <div className="chamfer-sm border border-line/60 bg-panel2/60 px-3.5 py-2 flex items-center gap-2 font-ar text-xs text-dim">
+                      <span className="text-sm">🔒</span>
+                      <span>مقفول</span>
+                    </div>
                   )}
                 </div>
               </div>
