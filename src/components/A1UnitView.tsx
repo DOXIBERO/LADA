@@ -2,28 +2,40 @@ import { useState, useEffect } from 'react';
 import { audio } from '../game/audio';
 import { narrator } from '../game/narrator';
 import LiveLessonTutor from './LiveLessonTutor';
+import InteractiveFlashcards from './InteractiveFlashcards';
 import type { A1Unit } from '../game/a1Curriculum';
 
 /* ============================================================
    LADA — GOETHE A1 UNIT VIEW
    Multi-modal learning environment:
-   1. المفردات (Wortschatz)
+   1. المفردات والتذكر النشط (Wortschatz & Flashcards)
    2. المحادثة (Dialog)
    3. القواعد (Grammatik)
    4. تركيب الجمل (Satzbau)
    5. الفهم الشفهي (Hörverstehen)
    ============================================================ */
 
+export type A1UnitTab = 'words' | 'dialog' | 'grammar' | 'sentence' | 'listening';
+
 interface Props {
   unit: A1Unit;
   onExit: () => void;
   onStartRoleplay: (scenarioId: string) => void;
+  initialTab?: A1UnitTab;
 }
 
-type Tab = 'words' | 'dialog' | 'grammar' | 'sentence' | 'listening';
+type Tab = A1UnitTab;
 
-export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
-  const [tab, setTab] = useState<Tab>('words');
+export default function A1UnitView({ unit, onExit, onStartRoleplay, initialTab }: Props) {
+  const [tab, setTab] = useState<Tab>(initialTab ?? 'words');
+  const [wordViewMode, setWordViewMode] = useState<'flashcards' | 'grid'>('flashcards');
+
+  // Sync tab if initialTab changes (e.g. user clicked a specific day in timeline)
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+    }
+  }, [initialTab, unit.id]);
 
   // Sentence Builder State
   const [exerciseIdx, setExerciseIdx] = useState(0);
@@ -224,60 +236,105 @@ export default function A1UnitView({ unit, onExit, onStartRoleplay }: Props) {
           </div>
         </div>
 
-        {/* TAB 1: WORDS */}
+        {/* TAB 1: WORDS & FLASHCARDS */}
         {tab === 'words' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-16">
-            {unit.words.map((w, idx) => (
-              <div key={idx} className="panel chamfer p-4 md:p-5 flex flex-col justify-between border-line/60 hover:border-cyan/50 transition-colors">
-                <div>
-                  <div className="flex items-center justify-between border-b border-line/40 pb-2.5 mb-3" dir="ltr">
-                    <div className="flex items-baseline gap-2">
-                      {w.article && (
-                        <span className={`font-mono text-xs px-1.5 py-0.5 rounded font-bold ${
-                          w.article === 'der' ? 'text-cyan bg-cyan/10 border border-cyan/30' :
-                          w.article === 'die' ? 'text-mag bg-mag/10 border border-mag/30' :
-                          'text-lime bg-lime/10 border border-lime/30'
-                        }`}>
-                          {w.article}
-                        </span>
-                      )}
-                      <span className="font-display text-2xl md:text-3xl font-bold text-ink text-glow-cyan">{w.de}</span>
-                      <span className="text-dim/80 font-mono text-xs px-2 py-0.5 rounded bg-panel2 border border-line/40">{w.ipa}</span>
+          <div className="space-y-5 pb-16">
+            {/* View Mode Switcher */}
+            <div className="flex items-center justify-between gap-3 p-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 max-w-md mx-auto" dir="rtl">
+              <button
+                onClick={() => { audio.uiClick(); setWordViewMode('flashcards'); }}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-ar font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  wordViewMode === 'flashcards'
+                    ? 'bg-emerald-500 text-slate-950 shadow-md font-bold'
+                    : 'text-dim hover:text-white'
+                }`}
+              >
+                <span>🎴</span>
+                <span>البطاقات التفاعلية (Active Recall)</span>
+              </button>
+
+              <button
+                onClick={() => { audio.uiClick(); setWordViewMode('grid'); }}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-ar font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  wordViewMode === 'grid'
+                    ? 'bg-cyan text-slate-950 shadow-md font-bold'
+                    : 'text-dim hover:text-white'
+                }`}
+              >
+                <span>📋</span>
+                <span>قائمة الكلمات ({unit.words.length})</span>
+              </button>
+            </div>
+
+            {/* Flashcards View */}
+            {wordViewMode === 'flashcards' && (
+              <InteractiveFlashcards
+                words={unit.words}
+                onComplete={() => {
+                  narrator.narrate({
+                    text: 'ممتاز بزاف! كملتي مراجعة الكلمات بنجاح. دابا دوز للحوار أو تركيب الجمل باش تطبق هادشي!',
+                    subtitle: '🎉 برافو عليك! كملتي مراجعة الكلمات التفاعلية.',
+                  });
+                }}
+              />
+            )}
+
+            {/* Grid List View */}
+            {wordViewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {unit.words.map((w, idx) => (
+                  <div key={idx} className="edtech-card p-4 md:p-5 flex flex-col justify-between border-slate-700 hover:border-cyan/50 transition-colors">
+                    <div>
+                      <div className="flex items-center justify-between border-b border-slate-700/40 pb-2.5 mb-3" dir="ltr">
+                        <div className="flex items-baseline gap-2">
+                          {w.article && (
+                            <span className={`font-mono text-xs px-2 py-0.5 rounded-full font-bold ${
+                              w.article === 'der' ? 'text-cyan bg-cyan/10 border border-cyan/30' :
+                              w.article === 'die' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/30' :
+                              'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30'
+                            }`}>
+                              {w.article}
+                            </span>
+                          )}
+                          <span className="font-display text-2xl md:text-3xl font-bold text-white">{w.de}</span>
+                          <span className="text-dim/80 font-mono text-xs px-2 py-0.5 rounded bg-slate-800 border border-slate-700/60">{w.ipa}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 mb-3" dir="rtl">
+                        <div className="font-ar text-xl font-bold text-emerald-400">{w.dz}</div>
+                        <div className="bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-md">
+                          <span className="text-[11px] text-dim font-ar ml-1">النطق:</span>
+                          <span className="font-ar text-sm font-bold text-amber-300">{w.phoneticAr}</span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl bg-slate-800/80 border border-slate-700/80 p-3 font-ar text-xs md:text-sm text-slate-200 leading-relaxed mb-2 text-right" dir="rtl">
+                        <span className="text-amber-400 font-bold ml-1.5">💡 العقلة:</span>
+                        <span>{w.mnemonic}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-slate-700/50 flex items-center justify-end gap-2" dir="ltr">
+                      <button
+                        onClick={() => { audio.ensure(); void audio.speakLive(w.de); }}
+                        className="neon-btn chamfer-sm px-3 py-1.5 text-xs font-ar flex items-center gap-1 hover:text-amber"
+                      >
+                        <span>🐢</span>
+                        <span>بشوية (0.7x)</span>
+                      </button>
+                      <button
+                        onClick={() => { audio.ensure(); void audio.speakLive(w.de); }}
+                        className="neon-btn neon-btn-cyan chamfer-sm px-3.5 py-1.5 text-xs font-ar flex items-center gap-1 font-bold"
+                      >
+                        <span>🔊</span>
+                        <span>نطق عادي</span>
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between gap-2 mb-3" dir="rtl">
-                    <div className="font-ar text-xl font-bold text-cyan text-glow-cyan">{w.dz}</div>
-                    <div className="bg-lime/10 border border-lime/30 px-2.5 py-0.5 chamfer-sm">
-                      <span className="text-[11px] text-dim font-ar ml-1">النطق:</span>
-                      <span className="font-ar text-sm font-bold text-lime">{w.phoneticAr}</span>
-                    </div>
-                  </div>
-
-                  <div className="chamfer-sm bg-mag/10 border border-mag/30 px-3 py-2 font-ar text-xs md:text-sm text-ink leading-relaxed mb-2 text-right" dir="rtl">
-                    <span className="text-mag font-bold ml-1.5">العقلة:</span>
-                    <span>{w.mnemonic}</span>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-2.5 border-t border-line/40 flex items-center justify-end gap-2" dir="ltr">
-                  <button
-                    onClick={() => { audio.ensure(); void audio.speakLive(w.de); }}
-                    className="neon-btn chamfer-sm px-2.5 py-1 text-xs font-ar flex items-center gap-1 hover:text-amber"
-                  >
-                    <span>🐢</span>
-                    <span>بشوية (0.7x)</span>
-                  </button>
-                  <button
-                    onClick={() => { audio.ensure(); void audio.speakLive(w.de); }}
-                    className="neon-btn neon-btn-cyan chamfer-sm px-3 py-1 text-xs font-ar flex items-center gap-1 font-bold"
-                  >
-                    <span>🔊</span>
-                    <span>نطق عادي</span>
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
 

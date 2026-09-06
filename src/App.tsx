@@ -6,10 +6,10 @@ import Highway, { type HighwayResult } from './components/Highway';
 import Vocal, { type VocalResult } from './components/Vocal';
 import Results from './components/Results';
 import AiVoiceCompanion from './components/AiVoiceCompanion';
-import A1UnitView from './components/A1UnitView';
+import A1UnitView, { type A1UnitTab } from './components/A1UnitView';
 import RoleplayPartner from './components/RoleplayPartner';
 import TikTokCourseView from './components/TikTokCourseView';
-import type { A1Unit } from './game/a1Curriculum';
+import { A1_UNITS, type A1Unit } from './game/a1Curriculum';
 import { audio } from './game/audio';
 import { ALL_WORDS, TRACKS, findWord, type Track, type Word } from './game/content';
 import { analyzeRun } from './game/ladaCore';
@@ -76,6 +76,7 @@ export default function App() {
   const [coachLines, setCoachLines] = useState<string[]>([]);
   const [muted, setMuted] = useState(false);
   const [selectedA1Unit, setSelectedA1Unit] = useState<A1Unit | null>(null);
+  const [selectedA1Tab, setSelectedA1Tab] = useState<A1UnitTab | undefined>(undefined);
   const [roleplayScenario, setRoleplayScenario] = useState<string>('restaurant');
   const [activeTikTokTrackId, setActiveTikTokTrackId] = useState<string>('street_vs_textbook');
 
@@ -191,6 +192,13 @@ export default function App() {
             onRevenge={startRevenge}
             onSelectA1Unit={(unit) => {
               setSelectedA1Unit(unit);
+              setSelectedA1Tab('words');
+              setScreen('a1Unit');
+            }}
+            onSelectTimelineDay={(day) => {
+              const unit = A1_UNITS.find((u) => u.id === day.unitId) ?? A1_UNITS[0];
+              setSelectedA1Unit(unit);
+              setSelectedA1Tab(day.tabTarget ?? 'words');
               setScreen('a1Unit');
             }}
             onStartRoleplay={(sc) => {
@@ -207,6 +215,7 @@ export default function App() {
         {screen === 'a1Unit' && selectedA1Unit && (
           <A1UnitView
             unit={selectedA1Unit}
+            initialTab={selectedA1Tab}
             onExit={() => setScreen('hub')}
             onStartRoleplay={(sc) => {
               setRoleplayScenario(sc);

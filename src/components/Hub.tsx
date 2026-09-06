@@ -3,13 +3,15 @@ import { audio } from '../game/audio';
 import { TRACKS, type Track } from '../game/content';
 import { A1_UNITS, type A1Unit } from '../game/a1Curriculum';
 import { TIKTOK_TRACKS, type TikTokTrack } from '../game/tiktokCourses';
+import TimelineRoadmap from './TimelineRoadmap';
+import type { TimelineDay } from '../game/curriculumTimeline';
 import { hasLiveKey } from '../game/gemini';
 import { decaySnapshot, isMastered, isUnlocked, type Profile } from '../game/srs';
 
 /* ============================================================
    LADA — COMMAND DECK & LEARNING HUB
-   Primary Goethe A1 Curriculum + TikTok Creator Masterclasses +
-   AI Voice Roleplay Lab + Optional Arcade Reflex Drills (Highway).
+   Primary Goethe A1 Curriculum + 30-Day Timeline Roadmap +
+   TikTok Creator Masterclasses + AI Voice Roleplay Lab.
    ============================================================ */
 
 interface Props {
@@ -21,6 +23,7 @@ interface Props {
   onSelectA1Unit: (unit: A1Unit) => void;
   onStartRoleplay: (scenarioId?: string) => void;
   onStartTikTokTrack?: (trackId: string) => void;
+  onSelectTimelineDay?: (day: TimelineDay) => void;
 }
 
 type HubTab = 'a1' | 'tiktok' | 'roleplay' | 'arcade';
@@ -34,6 +37,7 @@ export default function Hub({
   onSelectA1Unit,
   onStartRoleplay,
   onStartTikTokTrack,
+  onSelectTimelineDay,
 }: Props) {
   const [hubTab, setHubTab] = useState<HubTab>('a1');
   const snap = decaySnapshot(profile, Date.now());
@@ -124,22 +128,36 @@ export default function Hub({
         </div>
 
         {/* ============================================================
-            SECTION 1: GOETHE A1 LEARNING PATH
+            SECTION 1: GOETHE A1 LEARNING PATH & 30-DAY TIMELINE
            ============================================================ */}
         {hubTab === 'a1' && (
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3.5 pb-6">
-            <div className="panel chamfer p-4 bg-cyan/5 border-cyan/30 flex items-center justify-between gap-3 flex-wrap" dir="rtl">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-6 pb-6">
+            {/* Visual 30-Day Goethe A1 Learning Timeline Roadmap */}
+            <TimelineRoadmap
+              onSelectDay={(day) => {
+                if (onSelectTimelineDay) {
+                  onSelectTimelineDay(day);
+                } else {
+                  const targetUnit = A1_UNITS.find((u) => u.id === day.unitId) ?? A1_UNITS[0];
+                  onSelectA1Unit(targetUnit);
+                }
+              }}
+              currentDay={1}
+            />
+
+            {/* Units Overview Header */}
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-700/60 flex-wrap" dir="rtl">
               <div>
-                <h2 className="font-ar text-base md:text-lg font-bold text-ink mb-1">
-                  المنهج الكامل للمستوى الأول (Goethe-Zertifikat A1)
-                </h2>
-                <p className="font-ar text-xs md:text-sm text-dim leading-relaxed">
-                  دروس منظمة مع القواعد بالدارجة، تركيب الجمل (Satzbau)، واختبارات الفهم الشفهي (Hörverstehen).
+                <h3 className="font-ar text-base md:text-lg font-bold text-white">
+                  الوحدات الخمسة الشاملة (Goethe A1 Core Units)
+                </h3>
+                <p className="font-ar text-xs text-dim">
+                  دروس منظمة مع البطاقات التفاعلية (Active Recall)، القواعد بالدارجة، تركيب الجمل، والفهم الشفهي.
                 </p>
               </div>
               <button
                 onClick={() => { audio.uiOpen(); onStartRoleplay('restaurant'); }}
-                className="neon-btn neon-btn-mag chamfer-sm px-4 py-2 text-xs font-ar font-bold flex items-center gap-1.5"
+                className="neon-btn neon-btn-mag chamfer-sm px-4 py-2 text-xs font-ar font-bold flex items-center gap-1.5 shrink-0"
               >
                 <span>🎙️</span>
                 <span>تدرب على المحادثة الحية</span>
